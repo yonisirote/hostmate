@@ -7,23 +7,49 @@ import { refreshAccessToken } from "../lib/axios";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>({ userId: null, accessToken: null });
-  const lastAuthRef = useRef<AuthState>(authState);
-  const navigate = useNavigate();
-  const refreshAttemptedRef = useRef(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  const navigate = useNavigate();
+  const previousAuthStateRef = useRef<AuthState>(authState);
 
   const setAuth = useCallback<AuthContextValue["setAuth"]>((state) => {
     setAuthState(state);
     storeAccessToken(state.accessToken);
-    setIsInitializing(false);
   }, []);
 
   const clearAuth = useCallback<AuthContextValue["clearAuth"]>(() => {
     setAuthState({ userId: null, accessToken: null });
     storeAccessToken(null);
-    setIsInitializing(false);
   }, []);
 
+  // Initialize auth on mount: load from storage or refresh from server
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const storedToken = getAccessToken();
+
+      if (storedToken) {
+        setAuthState((prev) => ({ ...prev, accessToken: storedToken }));
+        setIsInitializing(false);
+        return;
+      }
+
+      // Try to refresh token from server (uses httpOnly cookie)
+      try {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          storeAccessToken(newToken);
+          setAuthState((prev) => ({ ...prev, accessToken: newToken }));
+        }
+      } catch {
+        storeAccessToken(null);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    void initializeAuth();
+  }, []);
+
+  // Subscribe to external token changes (e.g., from another tab)
   useEffect(() => {
     const applyToken = (token: string | null) => {
       setAuthState((prev) => {
@@ -40,46 +66,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    const currentToken = getAccessToken();
-    if (currentToken) {
-      applyToken(currentToken);
-    }
-
     const unsubscribe = subscribeToAccessToken(applyToken);
     return unsubscribe;
   }, []);
 
+  // Detect logout and redirect to login
   useEffect(() => {
-    if (authState.accessToken || refreshAttemptedRef.current) {
-      if (authState.accessToken) {
-        setIsInitializing(false);
-      }
-      return;
-    }
-    refreshAttemptedRef.current = true;
+    const wasAuthed = Boolean(previousAuthStateRef.current.accessToken);
+    const isAuthed = Boolean(authState.accessToken);
 
-    refreshAccessToken()
-      .then((token) => {
-        if (token) {
-          storeAccessToken(token);
-        }
-      })
-      .catch(() => {
-        storeAccessToken(null);
-      })
-      .finally(() => {
-        setIsInitializing(false);
-      });
-  }, [authState.accessToken]);
-
-  useEffect(() => {
-    const previouslyAuthed = Boolean(lastAuthRef.current.userId && lastAuthRef.current.accessToken);
-    const currentlyAuthed = Boolean(authState.userId && authState.accessToken);
-    if (previouslyAuthed && !currentlyAuthed) {
+    if (wasAuthed && !isAuthed) {
       navigate("/login", { replace: true });
     }
-    lastAuthRef.current = authState;
-  }, [authState, navigate]);
+
+    previousAuthStateRef.current = authState;
+  }, [authState.accessToken, navigate]);
 
   const value = useMemo<AuthContextValue>(() => ({
     userId: authState.userId,
