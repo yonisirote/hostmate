@@ -7,6 +7,7 @@ const mockAuthenticateUserId = jest.fn<(req: Request) => string | undefined>();
 
 const mockAddMeal = jest.fn();
 const mockAddGuestToMeal = jest.fn();
+const mockGetMealById = jest.fn<(mealId: string) => Promise<{ id: string; userId: string } | undefined>>();
 const mockRemoveGuestFromMeal = jest.fn<(mealId: string, guestId: string) => Promise<unknown[]>>();
 
 let handlers: MealsHandlers;
@@ -34,7 +35,7 @@ beforeEach(async () => {
   jest.unstable_mockModule("../../../db/queries/mealsQueries.js", () => ({
     addMeal: mockAddMeal,
     addGuestToMeal: mockAddGuestToMeal,
-    getMealById: jest.fn(),
+    getMealById: mockGetMealById,
     getMealsByUserId: jest.fn(),
     getMealGuests: jest.fn(),
     getMainMealRankings: jest.fn(),
@@ -93,10 +94,7 @@ describe("mealsHandler error handling", () => {
     const req = { params: { mealId: "meal-1", guestId: "guest-1" } } as unknown as Request;
     const { res } = createMockResponse();
     mockAuthenticateUserId.mockReturnValue("user-1");
-    
-    const mealsQueries = await import("../../../db/queries/mealsQueries.js");
-    (mealsQueries.getMealById as jest.Mock).mockResolvedValue({ id: "meal-1", userId: "user-1" });
-    
+    mockGetMealById.mockResolvedValue({ id: "meal-1", userId: "user-1" });
     mockRemoveGuestFromMeal.mockResolvedValue([]);
 
     const promise = handlers.removeGuestFromMealHandler(req, res);
