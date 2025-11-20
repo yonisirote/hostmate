@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { HttpError } from "../errors.js";
-import { authenticateUserId } from "../../auth.js";
-import { addGuestToMeal, addMeal, deleteMeal, editMeal, getDessertMealRankings, getMainMealRankings, getMealGuests, getMealsByUserId, getOtherMealRankings, getSideMealRankings, removeGuestFromMeal } from "../../db/queries/mealsQueries.js";
+import { authenticateUserId, verifyResourceOwnership } from "../../auth.js";
+import { addGuestToMeal, addMeal, deleteMeal, editMeal, getDessertMealRankings, getMainMealRankings, getMealGuests, getMealsByUserId, getOtherMealRankings, getSideMealRankings, removeGuestFromMeal, getMealById } from "../../db/queries/mealsQueries.js";
 
 
 export async function getMealsByUserHandler(req: Request, res: Response) {
@@ -24,6 +24,13 @@ export async function getMealGuestsHandler(req: Request, res: Response) {
   if (!mealId) {
     throw new HttpError(400, "Error with meal info.");
   }
+  
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
+  
   const guests = await getMealGuests(mealId);
   res.status(200).json(guests);
 }
@@ -62,10 +69,16 @@ export async function addGuestToMealHandler(req: Request, res: Response) {
     throw new HttpError(400, "Missing meal or guest information.");
   }
 
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
+
   let result = [];
   for (const guestId of guestIds) {
-    const res = await addGuestToMeal(mealId, guestId);
-    result.push(res);
+    const mealGuest = await addGuestToMeal(mealId, guestId);
+    result.push(mealGuest);
   }
 
   res.status(200).json(result);
@@ -81,6 +94,12 @@ export async function removeGuestFromMealHandler(req: Request, res: Response) {
   if (!mealId || !guestId) {
     throw new HttpError(400, "Missing meal or guest information.");
   }
+
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
 
   const result = await removeGuestFromMeal(mealId, guestId);
   if (!result || result.length === 0) {
@@ -100,6 +119,13 @@ export async function getMenuHandler(req: Request, res: Response) {
   if (!mealId) {
     throw new HttpError(400, "Error with meal info.");
   }
+  
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
+  
   const mainDishes = await getMainMealRankings(mealId);
   const sideDishes = await getSideMealRankings(mealId);
   const dessertDishes = await getDessertMealRankings(mealId);
@@ -124,6 +150,12 @@ export async function deleteMealHandler(req: Request, res: Response) {
     throw new HttpError(400, "Missing meal information.");
   }
 
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
+
   await deleteMeal(mealId);
 
   res.status(200).json({ message: "Meal deleted successfully." });
@@ -140,6 +172,12 @@ export async function editMealHandler(req: Request, res: Response) {
   if (!mealId || !date || !name) {
     throw new HttpError(400, "Missing meal information.");
   }
+
+  const meal = await getMealById(mealId);
+  if (!meal) {
+    throw new HttpError(404, "Meal not found.");
+  }
+  verifyResourceOwnership(meal.userId, userId);
 
   const result = await editMeal(mealId, date, name, description);
   res.status(200).json(result);

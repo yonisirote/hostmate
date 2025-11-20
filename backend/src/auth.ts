@@ -63,6 +63,12 @@ export function generateRefreshToken() {
   return crypto.randomBytes(32).toString('hex');
 }
 
+export function verifyResourceOwnership(resourceUserId: string, authenticatedUserId: string) {
+  if (resourceUserId !== authenticatedUserId) {
+    throw new HttpError(403, "Forbidden");
+  }
+}
+
 export async function hashPassword(password: string){
   try {
     const hashedPassword = await argon2.hash(password);

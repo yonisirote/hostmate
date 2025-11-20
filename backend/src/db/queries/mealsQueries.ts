@@ -9,6 +9,11 @@ export async function getMealsByUserId(userId: string) {
   return meals;
 }
 
+export async function getMealById(mealId: string) {
+  const [meal] = await db.select().from(mealsTable).where(eq(mealsTable.id, mealId));
+  return meal;
+}
+
 export async function getMealGuests(mealId: string) {
   const guests = await db
     .select({
