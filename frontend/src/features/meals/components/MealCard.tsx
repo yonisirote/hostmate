@@ -385,9 +385,9 @@ export function MealCard({
             <form className="space-y-3" onSubmit={handleEditSubmit}>
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]" htmlFor={`meal-name-${meal.id}`}>
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">
                     Meal name
-                  </label>
+                  </span>
                   <button
                     type="button"
                     className="text-xs font-semibold uppercase tracking-[0.3em] text-[#d37655] underline decoration-dotted disabled:opacity-60"
@@ -398,7 +398,6 @@ export function MealCard({
                   </button>
                 </div>
                 <input
-                  id={`meal-name-${meal.id}`}
                   value={editName}
                   onChange={(event) => {
                     setEditName(event.target.value);
@@ -406,42 +405,41 @@ export function MealCard({
                       setEditError(null);
                     }
                   }}
+                  aria-label="Meal name"
                   className="w-full rounded-xl border border-[#f5d8b4] bg-white/95 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]" htmlFor={`meal-date-${meal.id}`}>
+                <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">
                   Meal date
+                  <input
+                    type="date"
+                    value={editDate}
+                    onChange={(event) => {
+                      setEditDate(event.target.value);
+                      if (editError) {
+                        setEditError(null);
+                      }
+                    }}
+                    className="mt-1 block w-full rounded-xl border border-[#f5d8b4] bg-white/95 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
+                  />
                 </label>
-                <input
-                  id={`meal-date-${meal.id}`}
-                  type="date"
-                  value={editDate}
-                  onChange={(event) => {
-                    setEditDate(event.target.value);
-                    if (editError) {
-                      setEditError(null);
-                    }
-                  }}
-                  className="w-full rounded-xl border border-[#f5d8b4] bg-white/95 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
-                />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]" htmlFor={`meal-description-${meal.id}`}>
+                <label className="block text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">
                   Description
+                  <textarea
+                    value={editDescription}
+                    onChange={(event) => {
+                      setEditDescription(event.target.value);
+                      if (editError) {
+                        setEditError(null);
+                      }
+                    }}
+                    rows={3}
+                    className="mt-1 block w-full rounded-xl border border-[#f5d8b4] bg-white/95 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
+                  />
                 </label>
-                <textarea
-                  id={`meal-description-${meal.id}`}
-                  value={editDescription}
-                  onChange={(event) => {
-                    setEditDescription(event.target.value);
-                    if (editError) {
-                      setEditError(null);
-                    }
-                  }}
-                  rows={3}
-                  className="w-full rounded-xl border border-[#f5d8b4] bg-white/95 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
-                />
               </div>
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <button

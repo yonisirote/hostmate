@@ -119,32 +119,32 @@ const LoginPage = () => {
           {(mode === 'login' || mode === 'signup') && (
             <div className="space-y-5">
               {mode === 'signup' && (
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Name</label>
+                <label className="block space-y-2">
+                  <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Name</span>
                   <input
                     value={name}
                     onChange={e => setName(e.target.value)}
                     className="w-full rounded-xl border border-[#f5d8b4] bg-white/90 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
                   />
-                </div>
+                </label>
               )}
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Username</label>
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Username</span>
                 <input
                   value={username}
                   onChange={e => setUsername(e.target.value)}
                   className="w-full rounded-xl border border-[#f5d8b4] bg-white/90 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Password</label>
+              </label>
+              <label className="block space-y-2">
+                <span className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Password</span>
                 <input
                   type="password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-[#f5d8b4] bg-white/90 px-4 py-2 text-sm text-[#3f2a1d] focus:outline-none focus:ring-2 focus:ring-[#d37655]/50"
                 />
-              </div>
+              </label>
 
               <div className="flex flex-wrap items-center gap-3">
                 <button
