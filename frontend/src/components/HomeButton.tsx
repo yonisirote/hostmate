@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { HomeIcon } from './Icons';
 
 type Props = {
   className?: string;
@@ -17,10 +18,7 @@ export default function HomeButton({ className = '', ariaLabel = 'Go to home' }:
       title={ariaLabel}
     >
       <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#d37655]/90 text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-          <path d="M3 11.5 12 4l9 7.5" />
-          <path d="M5 10.5V20h14v-9.5" />
-        </svg>
+        <HomeIcon className="h-4 w-4" aria-hidden />
       </span>
       Home
     </button>

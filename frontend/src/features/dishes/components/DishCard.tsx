@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import toast from "react-hot-toast";
+import { EditIcon, DeleteIcon } from "../../../components/Icons";
 import type { Dish } from "../types";
 import { deleteDish } from "../api/dishesApi";
 import { EditDishModal } from "./EditDishModal";
@@ -52,19 +53,7 @@ export function DishCard({ dish, onRefresh }: DishCardProps) {
               onClick={() => setShowEdit(true)}
               aria-label="Edit dish"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5"
-              >
-                <path d="M12 20h9" />
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-              </svg>
+              <EditIcon className="h-5 w-5" aria-hidden />
             </button>
             <button
               type="button"
@@ -75,22 +64,7 @@ export function DishCard({ dish, onRefresh }: DishCardProps) {
               }}
               aria-label={showDelete ? "Cancel delete" : "Delete dish"}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-5 w-5"
-              >
-                <path d="M3 6h18" />
-                <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
-                <path d="M19 6v13a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V6" />
-                <path d="M10 11v6" />
-                <path d="M14 11v6" />
-              </svg>
+              <DeleteIcon className="h-5 w-5" aria-hidden />
             </button>
           </div>
           <div className="flex flex-col items-end gap-1 text-xs uppercase tracking-widest text-[#a77044]/80">

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { formatDisplayDate } from "../../../utils/date";
+import { EditIcon, DeleteIcon } from "../../../components/Icons";
 import type { GuestOption, Meal, MealGuest, SuggestedMenuByCategory } from "../types";
 import { MENU_CATEGORIES } from "../types";
 import { GuestInviteModal } from "./GuestInviteModal";
@@ -266,19 +267,7 @@ export function MealCard({
                 }}
                 aria-label="Edit meal"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M12 20h9" />
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
-                </svg>
+                <EditIcon className="h-5 w-5" aria-hidden />
               </button>
               <button
                 type="button"
@@ -292,22 +281,7 @@ export function MealCard({
                 }}
                 aria-label={showDeleteModal ? "Cancel delete" : "Delete meal"}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5"
-                >
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4.5A1.5 1.5 0 0 1 9.5 3h5A1.5 1.5 0 0 1 16 4.5V6" />
-                  <path d="M19 6v13a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19V6" />
-                  <path d="M10 11v6" />
-                  <path d="M14 11v6" />
-                </svg>
+                <DeleteIcon className="h-5 w-5" aria-hidden />
               </button>
             </div>
             <span className="text-[0.55rem] normal-case tracking-normal text-[#6f5440]">Based on guest rankings</span>
