@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/useAuth';
+import { getErrorMessage } from '../utils/errorHandler';
 import {
   addGuestsToMeal,
   deleteMeal,
@@ -142,13 +143,7 @@ const MealsPage = () => {
         await loadMealGuests(mealId, { silent: true });
         toast.success(uniqueGuestIds.length === 1 ? 'Guest added to meal' : 'Guests added to meal');
       } catch (err: unknown) {
-        let message = 'Failed to add guests to meal.';
-        if (err && typeof err === 'object' && 'response' in err) {
-          const response = (err as { response?: { data?: { message?: string } } }).response;
-          message = response?.data?.message ?? message;
-        } else if (err instanceof Error && err.message) {
-          message = err.message;
-        }
+        const message = getErrorMessage(err, 'Failed to add guests to meal.');
         toast.error(message);
         throw new Error(message);
       }
@@ -163,13 +158,7 @@ const MealsPage = () => {
         toast.success('Guest removed from meal');
         await loadMealGuests(mealId, { silent: true });
       } catch (err: unknown) {
-        let message = 'Failed to remove guest from meal.';
-        if (err && typeof err === 'object' && 'response' in err) {
-          const response = (err as { response?: { data?: { message?: string } } }).response;
-          message = response?.data?.message ?? message;
-        } else if (err instanceof Error && err.message) {
-          message = err.message;
-        }
+        const message = getErrorMessage(err, 'Failed to remove guest from meal.');
         toast.error(message);
         throw new Error(message);
       }
@@ -190,13 +179,7 @@ const MealsPage = () => {
         toast.success('Meal deleted');
         await refreshMeals();
       } catch (err: unknown) {
-        let message = 'Failed to delete meal.';
-        if (err && typeof err === 'object' && 'response' in err) {
-          const response = (err as { response?: { data?: { message?: string } } }).response;
-          message = response?.data?.message ?? message;
-        } else if (err instanceof Error && err.message) {
-          message = err.message;
-        }
+        const message = getErrorMessage(err, 'Failed to delete meal.');
         toast.error(message);
         throw new Error(message);
       }
@@ -211,13 +194,7 @@ const MealsPage = () => {
         toast.success('Meal updated');
         await refreshMeals();
       } catch (err: unknown) {
-        let message = 'Failed to update meal.';
-        if (err && typeof err === 'object' && 'response' in err) {
-          const response = (err as { response?: { data?: { message?: string } } }).response;
-          message = response?.data?.message ?? message;
-        } else if (err instanceof Error && err.message) {
-          message = err.message;
-        }
+        const message = getErrorMessage(err, 'Failed to update meal.');
         toast.error(message);
         throw new Error(message);
       }
