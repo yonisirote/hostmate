@@ -28,11 +28,13 @@ beforeEach(async () => {
 
   jest.unstable_mockModule("../../../auth.js", () => ({
     authenticateUserId: mockAuthenticateUserId,
+    verifyResourceOwnership: jest.fn(),
   }));
 
   jest.unstable_mockModule("../../../db/queries/mealsQueries.js", () => ({
     addMeal: mockAddMeal,
     addGuestToMeal: mockAddGuestToMeal,
+    getMealById: jest.fn(),
     getMealsByUserId: jest.fn(),
     getMealGuests: jest.fn(),
     getMainMealRankings: jest.fn(),
@@ -91,6 +93,10 @@ describe("mealsHandler error handling", () => {
     const req = { params: { mealId: "meal-1", guestId: "guest-1" } } as unknown as Request;
     const { res } = createMockResponse();
     mockAuthenticateUserId.mockReturnValue("user-1");
+    
+    const mealsQueries = await import("../../../db/queries/mealsQueries.js");
+    (mealsQueries.getMealById as jest.Mock).mockResolvedValue({ id: "meal-1", userId: "user-1" });
+    
     mockRemoveGuestFromMeal.mockResolvedValue([]);
 
     const promise = handlers.removeGuestFromMealHandler(req, res);
