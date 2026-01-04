@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { jest } from "@jest/globals";
-import { HttpError } from "../../errors.js";
 
 type GuestsHandlers = typeof import("../guestsHandler.js");
 

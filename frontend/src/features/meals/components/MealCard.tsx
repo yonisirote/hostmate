@@ -19,7 +19,7 @@ type MealCardProps = {
   menuLoading: boolean;
   menuError: string | null;
   onAddGuests: (mealId: string, guestIds: string[]) => Promise<void>;
-  onLoadMenu: (mealId: string) => Promise<SuggestedMenuByCategory>;
+  onLoadMenu: (mealId: string, options?: { includeUnsafe?: boolean }) => Promise<SuggestedMenuByCategory>;
   onOpenGuestModal: (guest: ModalGuest) => void;
   onDeleteMeal: (mealId: string) => Promise<void>;
   onUpdateMeal: (mealId: string, payload: { name: string; date: string; description?: string }) => Promise<void>;
@@ -150,22 +150,31 @@ export function MealCard({
       ? `Add ${selectedCount} ${selectedCount === 1 ? "guest" : "guests"}`
       : "Add guests";
 
+  const [includeUnsafeMenuItems, setIncludeUnsafeMenuItems] = useState(false);
+
   const handleToggleMenu = async () => {
     const willShow = !showMenu;
     setShowMenu(willShow);
     if (willShow) {
       try {
-        await onLoadMenu(meal.id);
+        await onLoadMenu(meal.id, { includeUnsafe: includeUnsafeMenuItems });
       } catch (err) {
         console.error(err);
       }
     }
   };
 
-  const handleRefreshMenu = () => {
-    void onLoadMenu(meal.id).catch((err) => {
+  const handleRefreshMenu = (includeUnsafe?: boolean) => {
+    void onLoadMenu(meal.id, { includeUnsafe: includeUnsafe ?? includeUnsafeMenuItems }).catch((err) => {
       console.error(err);
     });
+  };
+
+  const handleToggleUnsafeItems = (next: boolean) => {
+    setIncludeUnsafeMenuItems(next);
+    if (showMenu) {
+      handleRefreshMenu(next);
+    }
   };
 
   const handleDeleteMeal = async () => {
@@ -290,13 +299,15 @@ export function MealCard({
       </div>
 
       {showMenu && (
-        <SuggestedMenu
-          menuItems={menuItems}
-          isLoading={menuLoading}
-          error={menuError}
-          onRefresh={handleRefreshMenu}
-          mealHasItems={hasMenuItems}
-        />
+          <SuggestedMenu
+            menuItems={menuItems}
+            isLoading={menuLoading}
+            error={menuError}
+            onRefresh={() => handleRefreshMenu()}
+            mealHasItems={hasMenuItems}
+            includeUnsafe={includeUnsafeMenuItems}
+            onToggleIncludeUnsafe={handleToggleUnsafeItems}
+          />
       )}
 
       <div className="mt-5 rounded-2xl border border-[#f5d8b4]/60 bg-white/70 p-4">

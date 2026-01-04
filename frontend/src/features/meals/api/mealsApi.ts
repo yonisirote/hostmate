@@ -39,8 +39,14 @@ export async function removeGuestFromMeal(mealId: string, guestId: string) {
   return response.data;
 }
 
-export async function fetchSuggestedMenu(mealId: string): Promise<SuggestedMenuByCategory> {
-  const response: AxiosResponse<SuggestedMenuResponse | SuggestedMenuItem[] | undefined> = await api.get(`/meals/${mealId}/menu`);
+export async function fetchSuggestedMenu(mealId: string, options?: { includeUnsafe?: boolean }): Promise<SuggestedMenuByCategory> {
+  const params = new URLSearchParams();
+  if (options?.includeUnsafe) {
+    params.set("includeUnsafe", "true");
+  }
+
+  const suffix = params.size > 0 ? `?${params.toString()}` : "";
+  const response: AxiosResponse<SuggestedMenuResponse | SuggestedMenuItem[] | undefined> = await api.get(`/meals/${mealId}/menu${suffix}`);
   return groupMenuItemsByCategory(response.data);
 }
 

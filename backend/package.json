@@ -8,7 +8,7 @@
     "build": "npx tsc",
     "start": "node dist/server.js",
     "lint": "eslint . --ext .ts",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
+    "test": "NODE_ENV=test NODE_OPTIONS=--experimental-vm-modules jest --passWithNoTests",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio"

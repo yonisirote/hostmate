@@ -20,6 +20,7 @@ export type SuggestedMenuItem = {
   avgRank?: number | null;
   category?: string;
   description?: string;
+  conflictingAllergies?: string[];
 };
 
 export const MENU_CATEGORIES = ["main", "side", "dessert", "other"] as const;

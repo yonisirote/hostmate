@@ -18,6 +18,11 @@ export async function getDishesByUserId(userId: string){
   return dishes;
 }
 
+export async function getDishById(dishId: string) {
+  const [dish] = await db.select().from(dishesTable).where(eq(dishesTable.id, dishId));
+  return dish;
+}
+
 export async function editDish(dishId: string, dishName: string, dishCategory: Dish["category"], dishDescription?: string){
   const [updatedDish] = await db.update(dishesTable).set({
     name: dishName,

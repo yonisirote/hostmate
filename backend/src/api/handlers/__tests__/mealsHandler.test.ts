@@ -12,6 +12,7 @@ const mockRemoveGuestFromMeal = jest.fn<(mealId: string, guestId: string) => Pro
 
 let handlers: MealsHandlers;
 
+
 function createMockResponse() {
   const json = jest.fn();
   const status = jest.fn().mockReturnThis();

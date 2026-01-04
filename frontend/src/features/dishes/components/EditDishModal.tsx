@@ -3,6 +3,9 @@ import type { FormEvent } from "react";
 import toast from "react-hot-toast";
 import type { Dish, DishCategory } from "../types";
 import { updateDish } from "../api/dishesApi";
+import { fetchDishAllergens, setDishAllergens } from "../../allergies/api/allergiesApi";
+import { ALLERGIES } from "../../allergies/constants";
+import type { Allergy } from "../../allergies/constants";
 
 type EditDishModalProps = {
   dish: Dish;
@@ -16,13 +19,43 @@ export function EditDishModal({ dish, onClose, onUpdated }: EditDishModalProps) 
   const [name, setName] = useState(dish.name);
   const [description, setDescription] = useState(dish.description ?? "");
   const [category, setCategory] = useState<DishCategory>(dish.category ?? "other");
+  const [selectedAllergens, setSelectedAllergens] = useState<Allergy[]>([]);
+  const [loadingAllergens, setLoadingAllergens] = useState(false);
+  const [allergensLoadError, setAllergensLoadError] = useState<string | null>(null);
+  const [allergensReadOnly, setAllergensReadOnly] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     setName(dish.name);
     setDescription(dish.description ?? "");
     setCategory(dish.category ?? "other");
+    setAllergensReadOnly(true);
   }, [dish]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingAllergens(true);
+    setAllergensLoadError(null);
+
+    void fetchDishAllergens(dish.id)
+      .then((allergens) => {
+        if (cancelled) return;
+        setSelectedAllergens(allergens);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+        if (cancelled) return;
+        setAllergensLoadError("Failed to load allergens");
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoadingAllergens(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [dish.id]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -41,6 +74,9 @@ export function EditDishModal({ dish, onClose, onUpdated }: EditDishModalProps) 
         description: trimmedDescription || undefined,
         category,
       });
+      if (!allergensReadOnly) {
+        await setDishAllergens(dish.id, selectedAllergens);
+      }
       toast.success("Dish updated");
       onClose();
       await onUpdated();
@@ -59,7 +95,14 @@ export function EditDishModal({ dish, onClose, onUpdated }: EditDishModalProps) 
   };
 
   const canDismiss = !submitting;
+  const canEditAllergens = !allergensReadOnly && !loadingAllergens && !submitting;
 
+  const toggleAllergen = (allergy: Allergy) => {
+    if (!canEditAllergens) {
+      return;
+    }
+    setSelectedAllergens((prev) => (prev.includes(allergy) ? prev.filter((item) => item !== allergy) : [...prev, allergy]));
+  };
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-[#2b1c12]/40 px-3 py-6 sm:px-4 sm:py-8"
@@ -129,6 +172,62 @@ export function EditDishModal({ dish, onClose, onUpdated }: EditDishModalProps) 
                 </option>
               ))}
             </select>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044]">Allergens in dish</div>
+                <div className="text-xs text-[#6f5440]">
+                  {allergensReadOnly ? "Viewing" : "Editing"}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="text-xs font-semibold uppercase tracking-[0.3em] text-[#a77044] underline decoration-dotted disabled:opacity-60"
+                  onClick={() => setAllergensReadOnly(true)}
+                  disabled={submitting || loadingAllergens}
+                >
+                  View
+                </button>
+                <button
+                  type="button"
+                  className="text-xs font-semibold uppercase tracking-[0.3em] text-[#d37655] underline decoration-dotted disabled:opacity-60"
+                  onClick={() => {
+                    if (allergensLoadError) {
+                      toast.error("Cannot edit allergens until they load");
+                      return;
+                    }
+                    setAllergensReadOnly(false);
+                  }}
+                  disabled={submitting || loadingAllergens}
+                >
+                  Edit
+                </button>
+              </div>
+            </div>
+            {loadingAllergens ? (
+              <div className="text-xs text-[#6f5440]">Loading allergens...</div>
+            ) : allergensLoadError ? (
+              <div className="space-y-1">
+                <div className="text-xs text-[#d37655]">{allergensLoadError}</div>
+                <div className="text-xs text-[#6f5440]">Your current selection was not changed.</div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2 text-sm text-[#3f2a1d]">
+                {ALLERGIES.map((allergy) => (
+                  <label key={allergy} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedAllergens.includes(allergy)}
+                      onChange={() => toggleAllergen(allergy)}
+                      disabled={!canEditAllergens}
+                    />
+                    <span className="capitalize">{allergy.replace(/-/g, " ")}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex flex-wrap items-center gap-3 pt-1">
             <button

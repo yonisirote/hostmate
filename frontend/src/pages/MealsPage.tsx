@@ -115,10 +115,10 @@ const MealsPage = () => {
     [],
   );
 
-  const loadSuggestedMenu = useCallback(async (mealId: string) => {
+  const loadSuggestedMenu = useCallback(async (mealId: string, options?: { includeUnsafe?: boolean }) => {
     setMenuLoading((state) => ({ ...state, [mealId]: true }));
     try {
-      const normalized = await fetchSuggestedMenu(mealId);
+      const normalized = await fetchSuggestedMenu(mealId, options);
       setMenuByMeal((prev) => ({ ...prev, [mealId]: normalized }));
       setMenuError((state) => ({ ...state, [mealId]: null }));
       return normalized;

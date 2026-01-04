@@ -24,12 +24,12 @@ export function generateAccessToken(userId: string, secret: string) {
 export function validateToken(token: string, secret: string) {
   try {
     const decodedPayload = jwt.verify(token, secret) as JwtPayload;
-    return { valid: true, expired: false, payload: decodedPayload  };  
+    return { valid: true, expired: false, payload: decodedPayload };
   } catch (error) {
     if (error instanceof jwt.TokenExpiredError) {
       return { valid: false, expired: true, payload: null };
     }
-    return { valid: false, expired: false, payloads: null };
+    return { valid: false, expired: false, payload: null };
   }
 
 }
@@ -54,7 +54,7 @@ export function authenticateUserId(req: Request){
       throw new Error();
     }
     return decoded.payload.sub; // userId
-  } catch (error) {
+  } catch {
     throw new HttpError(401, "Failed to authenticate token");
   }
 }
@@ -73,7 +73,7 @@ export async function hashPassword(password: string){
   try {
     const hashedPassword = await argon2.hash(password);
     return hashedPassword;
-  } catch (error) {
+  } catch {
     throw new HttpError(500, "Failed to hash password");
   }
 }
@@ -82,7 +82,7 @@ export async function checkHashedPassword(hashedPassword: string, plainPassword:
   try {
     const isMatch = await argon2.verify(hashedPassword, plainPassword);
     return isMatch;
-  } catch (error) {
+  } catch {
     throw new HttpError(500, "Failed to check hashed password");
   }
 }

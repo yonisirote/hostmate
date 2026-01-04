@@ -75,7 +75,7 @@ export async function addGuestToMealHandler(req: Request, res: Response) {
   }
   verifyResourceOwnership(meal.userId, userId);
 
-  let result = [];
+  const result = [];
   for (const guestId of guestIds) {
     const mealGuest = await addGuestToMeal(mealId, guestId);
     result.push(mealGuest);
@@ -126,10 +126,12 @@ export async function getMenuHandler(req: Request, res: Response) {
   }
   verifyResourceOwnership(meal.userId, userId);
   
-  const mainDishes = await getMainMealRankings(mealId);
-  const sideDishes = await getSideMealRankings(mealId);
-  const dessertDishes = await getDessertMealRankings(mealId);
-  const otherDishes = await getOtherMealRankings(mealId);
+  const includeUnsafe = req.query.includeUnsafe === "true";
+
+  const mainDishes = await getMainMealRankings(mealId, includeUnsafe);
+  const sideDishes = await getSideMealRankings(mealId, includeUnsafe);
+  const dessertDishes = await getDessertMealRankings(mealId, includeUnsafe);
+  const otherDishes = await getOtherMealRankings(mealId, includeUnsafe);
 
   res.status(200).json({
     main: mainDishes.slice(0, 2),

@@ -8,6 +8,7 @@ import { guestsRouter } from "./api/routes/guestsRoute.js";
 import { config } from "./config/config.js"
 import { authRouter } from "./api/routes/authRoute.js";
 import { dishesRouter } from "./api/routes/dishesRoute.js";
+import { allergiesRouter } from "./api/routes/allergiesRoute.js";
 import { runMigrations } from "./db/dbConfig.js";
 import { mealsRouter } from "./api/routes/mealsRoute.js";
 import { errorHandler } from "./api/middleware/errorHandler.js";
@@ -30,6 +31,7 @@ if (!config.isProd){
 app.use("/api/auth", authRouter);
 app.use("/api/guests", guestsRouter);
 app.use("/api/dishes", dishesRouter);
+app.use("/api/allergies", allergiesRouter);
 app.use("/api/meals", mealsRouter);
 
 if (config.isProd) {
