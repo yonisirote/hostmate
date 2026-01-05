@@ -8,6 +8,7 @@ export interface Guest {
   id: string;
   name: string;
   userId: string;
+  rankToken: string;
 }
 
 export type DishCategory = 'main' | 'side' | 'dessert' | 'other';
