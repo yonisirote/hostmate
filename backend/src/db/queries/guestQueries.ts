@@ -31,10 +31,12 @@ export async function getGuestDishes(userId: string, guestId: string){
   // Use LEFT JOIN so dishes without a rank for this guest still appear with rank = null.
   const rows = await db
     .select({
+      id: dishesTable.id, // Changed from dishId to id to match interface expectation
       dishRankId: dishesRankTable.id,
       dishId: dishesTable.id,
       name: dishesTable.name,
       description: dishesTable.description,
+      category: dishesTable.category, // Added category as it's needed for grouping
       rank: dishesRankTable.rank,
     })
     .from(dishesTable)

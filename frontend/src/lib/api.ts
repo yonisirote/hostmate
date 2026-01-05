@@ -1,65 +1,63 @@
-export type ApiError = {
-  message: string;
-};
+import axios from 'axios';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-export class HttpError extends Error {
-  status: number;
-  payload?: unknown;
-
-  constructor(status: number, message: string, payload?: unknown) {
-    super(message);
-    this.status = status;
-    this.payload = payload;
-  }
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
 }
 
-async function parseJsonSafe(response: Response): Promise<unknown> {
-  const contentType = response.headers.get("content-type");
-  if (!contentType?.includes("application/json")) {
-    return null;
-  }
+// Create axios instance
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true, // Important for cookies
+});
 
-  try {
-    return (await response.json()) as unknown;
-  } catch {
-    return null;
-  }
+let accessToken: string | null = null;
+
+export function setAccessToken(token: string | null) {
+  accessToken = token;
 }
 
-function getErrorMessage(payload: unknown, fallback: string) {
-  if (payload && typeof payload === "object" && "message" in payload) {
-    const message = (payload as { message?: unknown }).message;
-    if (typeof message === "string" && message.trim()) {
-      return message;
+// Request interceptor to add bearer token
+api.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
+});
+
+// Response interceptor for handling 401s
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    const requestedUrl: string | undefined = originalRequest?.url;
+    const isPublicTokenEndpoint = requestedUrl?.startsWith('/guests/token/');
+
+    // If error is 401 and we haven't tried to refresh yet
+    // Note: public token endpoints should not force-refresh or redirect.
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicTokenEndpoint) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh the token
+        const { data } = await api.post('/auth/refresh');
+        const newAccessToken = data.accessToken;
+
+        setAccessToken(newAccessToken);
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        // Retry the original request
+        return api(originalRequest);
+      } catch (refreshError) {
+        // If refresh fails, redirect to login (or handle as needed)
+        setAccessToken(null);
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      }
     }
+
+    return Promise.reject(error);
   }
-
-  return fallback;
-}
-
-export async function apiFetch<T>(
-  path: string,
-  options?: {
-    method?: string;
-    body?: unknown;
-    accessToken?: string | null;
-  },
-): Promise<T> {
-  const response = await fetch(`/api${path}`, {
-    method: options?.method ?? "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options?.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
-    },
-    credentials: "include",
-    body: options?.body === undefined ? undefined : JSON.stringify(options.body),
-  });
-
-  const payload = await parseJsonSafe(response);
-
-  if (!response.ok) {
-    throw new HttpError(response.status, getErrorMessage(payload, response.statusText), payload);
-  }
-
-  return payload as T;
-}
+);

@@ -1,10 +1,20 @@
 @import "tailwindcss";
 
-html,
-body {
-  height: 100%;
+@theme {
+  --color-warm-50: #fdfbf7;
+  --color-warm-100: #fbf7ef;
+  --color-warm-200: #f5eadb;
+  --color-warm-300: #edd8bd;
+  --color-warm-400: #e2be95;
+  --color-warm-500: #d7a270;
+  --color-warm-600: #ca8a59;
+  --color-warm-700: #a86f45;
+  --color-warm-800: #885a3c;
+  --color-warm-900: #6e4a34;
 }
 
-body {
-  margin: 0;
+@layer base {
+  body {
+    @apply bg-warm-50 text-warm-900;
+  }
 }
