@@ -19,10 +19,22 @@ function createProdClient() {
   return createClient({ url, authToken });
 }
 
-export const dbClient =
-  process.env.NODE_ENV === "test" ? createClient({ url: ":memory:" }) : createProdClient();
+export let dbClient = createClient({ url: ":memory:" });
 
-export const db = drizzle(dbClient);
+if (process.env.NODE_ENV !== "test") {
+  dbClient = createProdClient();
+}
+
+export let db = drizzle(dbClient);
+
+export function resetTestDbClient(client: Client) {
+  if (process.env.NODE_ENV !== "test") {
+    throw new Error("resetTestDbClient can only be used in tests");
+  }
+
+  dbClient = client;
+  db = drizzle(client);
+}
 
 export function createDb(client: Client): LibSQLDatabase {
   return drizzle(client);
