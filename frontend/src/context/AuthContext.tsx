@@ -13,17 +13,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) {
+      setIsLoading(false);
+      return;
+    }
+
+    setUser(JSON.parse(storedUser) as User);
+
     const checkAuth = async () => {
-        try {
-          const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
+      try {
+        const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
         if (data.accessToken) {
           setAccessToken(data.accessToken);
-
-          // Since we don't have a /me endpoint, we rely on localStorage
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            setUser(JSON.parse(storedUser) as User);
-          }
+        } else {
+          throw new Error('Missing access token');
         }
       } catch {
         localStorage.removeItem('user');
