@@ -13,13 +13,20 @@ import { runMigrations } from "./db/dbConfig.js";
 import { mealsRouter } from "./api/routes/mealsRoute.js";
 import { errorHandler } from "./api/middleware/errorHandler.js";
 
-await runMigrations();
-
 const app = express();
 const __dirname = path.resolve();
 
+app.get("/api/health", (_, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.use(express.json());
 app.use(cookieParser());
+
+// Start migrations in background so server can respond.
+runMigrations().catch((error) => {
+  console.error("Database migrations failed", error);
+});
 
 if (!config.isProd) {
   app.use(

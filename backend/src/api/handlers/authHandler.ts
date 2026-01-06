@@ -62,6 +62,7 @@ export async function loginHandler(req: Request, res: Response) {
       httpOnly: true,
       secure: config.isProd,
       sameSite: config.isProd ? "none" : "lax",
+      path: "/",
       maxAge: config.jwt.refreshExpiry * 1000, // maxAge is ms, refreshExpiry is in seconds
     }).
     json({
@@ -100,6 +101,7 @@ export async function revokeHandler(req: Request, res: Response) {
     httpOnly: true,
     secure: config.isProd,
     sameSite: config.isProd ? "none" : "lax",
+    path: "/",
   });
   res.status(204).send();
 }
