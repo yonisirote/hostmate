@@ -1,24 +1,24 @@
 import type { Request, Response } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 type DishesHandlers = typeof import("../dishesHandler.js");
 
-const mockAuthenticateUserId = jest.fn<(req: Request) => string | undefined>();
-const mockAddDish = jest.fn();
-const mockEditDish = jest.fn();
-const mockDeleteDish = jest.fn();
+const mockAuthenticateUserId = vi.fn<(req: Request) => string | undefined>();
+const mockAddDish = vi.fn();
+const mockEditDish = vi.fn();
+const mockDeleteDish = vi.fn();
 
 type DishRecord = {
   id: string;
 };
 
-const mockGetDishesByUserId = jest.fn<(userId: string) => Promise<DishRecord[]>>();
+const mockGetDishesByUserId = vi.fn<(userId: string) => Promise<DishRecord[]>>();
 
 let handlers: DishesHandlers;
 
 function createMockResponse() {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -28,16 +28,16 @@ function createMockResponse() {
 }
 
 beforeEach(async () => {
-  jest.resetAllMocks();
-  jest.resetModules();
+  vi.resetAllMocks();
+  vi.resetModules();
 
-  jest.unstable_mockModule("../../../auth.js", () => ({
+  vi.mock("../../../auth.js", () => ({
     authenticateUserId: mockAuthenticateUserId,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/dishQueries.js", () => ({
+  vi.mock("../../../db/queries/dishQueries.js", () => ({
     addDish: mockAddDish,
-    getDishes: jest.fn(),
+    getDishes: vi.fn(),
     getDishesByUserId: mockGetDishesByUserId,
     editDish: mockEditDish,
     deleteDish: mockDeleteDish,

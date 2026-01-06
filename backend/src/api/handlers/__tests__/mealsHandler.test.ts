@@ -1,30 +1,30 @@
 import type { Request, Response } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 type MealsHandlers = typeof import("../mealsHandler.js");
 
-const mockAuthenticateUserId = jest.fn<(req: Request) => string | undefined>();
-const mockVerifyResourceOwnership = jest.fn<(resourceUserId: string, authenticatedUserId: string) => void>();
+const mockAuthenticateUserId = vi.fn<(req: Request) => string | undefined>();
+const mockVerifyResourceOwnership = vi.fn<(resourceUserId: string, authenticatedUserId: string) => void>();
 
-const mockAddMeal = jest.fn();
-const mockAddGuestToMeal = jest.fn();
-const mockGetMealById = jest.fn<(mealId: string) => Promise<{ id: string; userId: string } | undefined>>();
-const mockRemoveGuestFromMeal = jest.fn<(mealId: string, guestId: string) => Promise<unknown[]>>();
-const mockGetMealsByUserId = jest.fn<(userId: string) => Promise<unknown[]>>();
-const mockGetMealGuests = jest.fn<(mealId: string) => Promise<unknown[]>>();
-const mockDeleteMeal = jest.fn<(mealId: string) => Promise<void>>();
-const mockEditMeal = jest.fn();
-const mockGetMainMealRankings = jest.fn();
-const mockGetSideMealRankings = jest.fn();
-const mockGetDessertMealRankings = jest.fn();
-const mockGetOtherMealRankings = jest.fn();
+const mockAddMeal = vi.fn();
+const mockAddGuestToMeal = vi.fn();
+const mockGetMealById = vi.fn<(mealId: string) => Promise<{ id: string; userId: string } | undefined>>();
+const mockRemoveGuestFromMeal = vi.fn<(mealId: string, guestId: string) => Promise<unknown[]>>();
+const mockGetMealsByUserId = vi.fn<(userId: string) => Promise<unknown[]>>();
+const mockGetMealGuests = vi.fn<(mealId: string) => Promise<unknown[]>>();
+const mockDeleteMeal = vi.fn<(mealId: string) => Promise<void>>();
+const mockEditMeal = vi.fn();
+const mockGetMainMealRankings = vi.fn();
+const mockGetSideMealRankings = vi.fn();
+const mockGetDessertMealRankings = vi.fn();
+const mockGetOtherMealRankings = vi.fn();
 
 let handlers: MealsHandlers;
 
 
 function createMockResponse() {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -34,15 +34,15 @@ function createMockResponse() {
 }
 
 beforeEach(async () => {
-  jest.resetAllMocks();
-  jest.resetModules();
+  vi.resetAllMocks();
+  vi.resetModules();
 
-  jest.unstable_mockModule("../../../auth.js", () => ({
+  vi.doMock("../../../auth.js", () => ({
     authenticateUserId: mockAuthenticateUserId,
     verifyResourceOwnership: mockVerifyResourceOwnership,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/mealsQueries.js", () => ({
+  vi.doMock("../../../db/queries/mealsQueries.js", () => ({
     addMeal: mockAddMeal,
     addGuestToMeal: mockAddGuestToMeal,
     getMealById: mockGetMealById,

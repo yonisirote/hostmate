@@ -9,7 +9,7 @@
     // See also https://aka.ms/tsconfig/module
     "module": "nodenext",
     "target": "es2022",
-    "types": ["node", "jest"],
+    "types": ["node", "vitest/globals"],
     // For nodejs:
     "lib": ["es2022", "dom", "dom.iterable"],
     // "types": ["node"],
@@ -49,12 +49,13 @@
     "moduleDetection": "force",
     "skipLibCheck": true
   },
+  "include": ["src"],
   "exclude": [
     "dist",
     "eslint.config.js",
     "eslint.config.d.ts",
-    "jest.config.cjs",
     "drizzle.config.ts",
+    "vitest.config.ts",
     "src/**/*.test.ts"
   ]
 }

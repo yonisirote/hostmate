@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 type AuthHandlersModule = typeof import("../authHandler.js");
 
@@ -32,16 +32,16 @@ const REQUIRED_ENV = {
   PORT: "4000",
 };
 
-const mockCreateUser = jest.fn<(user: NewUserRecord) => Promise<UserRecord>>();
-const mockGetUserByUsername = jest.fn<(username: string) => Promise<UserRecord | undefined>>();
-const mockSaveRefreshToken = jest.fn<(token: string, userId: string) => Promise<void>>();
-const mockGetRefreshToken = jest.fn<(token: string) => Promise<RefreshRecord | null>>();
-const mockRevokeRefreshToken = jest.fn<(token: string) => Promise<void>>();
-const mockGenerateAccessToken = jest.fn<(userId: string, secret: string) => string>();
-const mockGenerateRefreshToken = jest.fn<() => string>();
-const mockGetBearerToken = jest.fn<(req: Request) => string>();
-const mockHashPassword = jest.fn<(password: string) => Promise<string>>();
-const mockCheckHashedPassword = jest.fn<(hashed: string, password: string) => Promise<boolean>>();
+const mockCreateUser = vi.fn<(user: NewUserRecord) => Promise<UserRecord>>();
+const mockGetUserByUsername = vi.fn<(username: string) => Promise<UserRecord | undefined>>();
+const mockSaveRefreshToken = vi.fn<(token: string, userId: string) => Promise<void>>();
+const mockGetRefreshToken = vi.fn<(token: string) => Promise<RefreshRecord | null>>();
+const mockRevokeRefreshToken = vi.fn<(token: string) => Promise<void>>();
+const mockGenerateAccessToken = vi.fn<(userId: string, secret: string) => string>();
+const mockGenerateRefreshToken = vi.fn<() => string>();
+const mockGetBearerToken = vi.fn<(req: Request) => string>();
+const mockHashPassword = vi.fn<(password: string) => Promise<string>>();
+const mockCheckHashedPassword = vi.fn<(hashed: string, password: string) => Promise<boolean>>();
 
 let handlers: AuthHandlersModule;
 
@@ -52,10 +52,10 @@ beforeAll(() => {
 });
 
 beforeEach(async () => {
-  jest.resetAllMocks();
-  jest.resetModules();
+  vi.resetAllMocks();
+  vi.resetModules();
 
-  jest.unstable_mockModule("../../../db/queries/userQueries.js", () => ({
+  vi.doMock("../../../db/queries/userQueries.js", () => ({
     createUser: mockCreateUser,
     getUserByUsername: mockGetUserByUsername,
     saveRefreshToken: mockSaveRefreshToken,
@@ -63,7 +63,7 @@ beforeEach(async () => {
     revokeRefreshToken: mockRevokeRefreshToken,
   }));
 
-  jest.unstable_mockModule("../../../auth.js", () => ({
+  vi.doMock("../../../auth.js", () => ({
     generateAccessToken: mockGenerateAccessToken,
     generateRefreshToken: mockGenerateRefreshToken,
     getBearerToken: mockGetBearerToken,
@@ -75,11 +75,11 @@ beforeEach(async () => {
 });
 
 function createMockResponse() {
-  const json = jest.fn();
-  const cookie = jest.fn().mockReturnThis();
-  const clearCookie = jest.fn().mockReturnThis();
-  const status = jest.fn().mockReturnThis();
-  const send = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const cookie = vi.fn().mockReturnThis();
+  const clearCookie = vi.fn().mockReturnThis();
+  const status = vi.fn().mockReturnThis();
+  const send = vi.fn().mockReturnThis();
   const res = {
     status,
     cookie,
@@ -293,7 +293,7 @@ describe("refreshHandler", () => {
 
   test("treats tokens expiring at the current instant as valid", async () => {
     const now = Date.now();
-    const nowSpy = jest.spyOn(Date, "now").mockReturnValue(now);
+    const nowSpy = vi.spyOn(Date, "now").mockReturnValue(now);
 
     const stored: RefreshRecord = {
       userId: "user-1",

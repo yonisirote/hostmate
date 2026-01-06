@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
@@ -212,8 +212,8 @@ describe("mealsQueries allergy filtering", () => {
   }
 
   beforeEach(async () => {
-    jest.resetAllMocks();
-    jest.resetModules();
+    vi.resetAllMocks();
+    vi.resetModules();
 
     client = createClient({ url: ":memory:" });
     const testDb = drizzle(client);
@@ -221,7 +221,7 @@ describe("mealsQueries allergy filtering", () => {
     await createSchema();
     await seedBase();
 
-    jest.unstable_mockModule("../dbConfig.js", () => ({
+    vi.doMock("../dbConfig.js", () => ({
       db: testDb,
     }));
 

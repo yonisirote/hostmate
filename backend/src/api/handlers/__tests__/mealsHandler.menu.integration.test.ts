@@ -1,5 +1,5 @@
 import type { Request } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
@@ -9,13 +9,13 @@ type MealsHandlers = typeof import("../mealsHandler.js");
 
 type MockResponse = {
   res: Response;
-  status: jest.Mock;
-  json: jest.Mock;
+  status: ReturnType<typeof vi.fn>;
+  json: ReturnType<typeof vi.fn>;
 };
 
 function createMockResponse(): MockResponse {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -135,20 +135,20 @@ describe("mealsHandler getMenuHandler integration (allergy filtering)", () => {
   }
 
   beforeEach(async () => {
-    jest.resetAllMocks();
-    jest.resetModules();
+    vi.resetAllMocks();
+    vi.resetModules();
 
     client = createClient({ url: ":memory:" });
     const testDb = drizzle(client);
 
     await createSchemaAndSeed();
 
-    jest.unstable_mockModule("../../../auth.js", () => ({
-      authenticateUserId: jest.fn(() => "u1"),
-      verifyResourceOwnership: jest.fn(),
+    vi.doMock("../../../auth.js", () => ({
+      authenticateUserId: vi.fn(() => "u1"),
+      verifyResourceOwnership: vi.fn(),
     }));
 
-    jest.unstable_mockModule("../../../db/dbConfig.js", () => ({
+    vi.doMock("../../../db/dbConfig.js", () => ({
       db: testDb,
     }));
 

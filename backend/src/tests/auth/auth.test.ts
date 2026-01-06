@@ -1,10 +1,9 @@
 import jwt, { type JwtPayload } from "jsonwebtoken";
 import type { Request } from "express";
-import { jest } from "@jest/globals";
 
-type AuthModule = typeof import("../auth.js");
+type AuthModule = typeof import("../../auth.js");
 
-type ConfigModule = typeof import("../config/config.js");
+type ConfigModule = typeof import("../../config/config.js");
 
 const REQUIRED_ENV = {
   TURSO_DATABASE_URL: "libsql://example",
@@ -25,12 +24,11 @@ beforeAll(() => {
   });
 });
 
-jest.setTimeout(20000);
 
 beforeEach(async () => {
-  jest.resetModules();
-  auth = await import("../auth.js");
-  configModule = await import("../config/config.js");
+  vi.resetModules();
+  auth = await import("../../auth.js");
+  configModule = await import("../../config/config.js");
 });
 
 describe("auth token helpers", () => {

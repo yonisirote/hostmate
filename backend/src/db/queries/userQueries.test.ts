@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { createClient } from "@libsql/client";
 import { drizzle } from "drizzle-orm/libsql";
 
@@ -56,19 +56,19 @@ describe("userQueries", () => {
   }
 
   beforeEach(async () => {
-    jest.resetAllMocks();
-    jest.resetModules();
+    vi.resetAllMocks();
+    vi.resetModules();
 
     client = createClient({ url: ":memory:" });
     const testDb = drizzle(client);
 
     await createSchema();
 
-    jest.unstable_mockModule("../dbConfig.js", () => ({
+    vi.doMock("../dbConfig.js", () => ({
       db: testDb,
     }));
 
-    jest.unstable_mockModule("../../config/config.js", () => ({
+    vi.doMock("../../config/config.js", () => ({
       config: {
         jwt: {
           refreshExpiry: 60,

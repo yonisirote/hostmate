@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 type GuestsHandlers = typeof import("../guestsHandler.js");
 
@@ -12,24 +12,24 @@ type GuestRankTokenRecord = {
   userId: string;
 };
 
-const mockAuthenticateUserId = jest.fn<(req: Request) => string | undefined>();
-const mockAddGuest = jest.fn();
-const mockGetGuestUser = jest.fn<(guestId: string) => Promise<GuestUserRecord | undefined>>();
-const mockGetGuestsByUserId = jest.fn<(userId: string) => Promise<unknown[]>>();
-const mockGetGuestDishes = jest.fn<(userId: string, guestId: string) => Promise<unknown[]>>();
-const mockGetGuestByRankToken = jest.fn<(rankToken: string) => Promise<GuestRankTokenRecord | undefined>>();
-const mockGetUserNameById = jest.fn<(userId: string) => Promise<string | undefined>>();
-const mockGetDishForUser = jest.fn<(dishId: string, userId: string) => Promise<unknown | undefined>>();
-const mockDeleteGuest = jest.fn<(guestId: string) => Promise<void>>();
-const mockUpdateGuest = jest.fn<(guestId: string, newName: string) => Promise<unknown>>();
-const mockRankDish = jest.fn();
+const mockAuthenticateUserId = vi.fn<(req: Request) => string | undefined>();
+const mockAddGuest = vi.fn();
+const mockGetGuestUser = vi.fn<(guestId: string) => Promise<GuestUserRecord | undefined>>();
+const mockGetGuestsByUserId = vi.fn<(userId: string) => Promise<unknown[]>>();
+const mockGetGuestDishes = vi.fn<(userId: string, guestId: string) => Promise<unknown[]>>();
+const mockGetGuestByRankToken = vi.fn<(rankToken: string) => Promise<GuestRankTokenRecord | undefined>>();
+const mockGetUserNameById = vi.fn<(userId: string) => Promise<string | undefined>>();
+const mockGetDishForUser = vi.fn<(dishId: string, userId: string) => Promise<unknown | undefined>>();
+const mockDeleteGuest = vi.fn<(guestId: string) => Promise<void>>();
+const mockUpdateGuest = vi.fn<(guestId: string, newName: string) => Promise<unknown>>();
+const mockRankDish = vi.fn();
 
 let handlers: GuestsHandlers;
 
 function createMockResponse() {
-  const json = jest.fn();
-  const send = jest.fn().mockReturnThis();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const send = vi.fn().mockReturnThis();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -40,27 +40,27 @@ function createMockResponse() {
 }
 
 beforeEach(async () => {
-  jest.resetAllMocks();
-  jest.resetModules();
+  vi.resetAllMocks();
+  vi.resetModules();
 
-  jest.unstable_mockModule("../../../auth.js", () => ({
+  vi.doMock("../../../auth.js", () => ({
     authenticateUserId: mockAuthenticateUserId,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/guestQueries.js", () => ({
+  vi.doMock("../../../db/queries/guestQueries.js", () => ({
     addGuest: mockAddGuest,
     deleteGuest: mockDeleteGuest,
     getDishForUser: mockGetDishForUser,
     getGuestByRankToken: mockGetGuestByRankToken,
     getGuestDishes: mockGetGuestDishes,
-    getGuests: jest.fn(),
+    getGuests: vi.fn(),
     getGuestsByUserId: mockGetGuestsByUserId,
     getGuestUser: mockGetGuestUser,
     rankDish: mockRankDish,
     updateGuest: mockUpdateGuest,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/userQueries.js", () => ({
+  vi.doMock("../../../db/queries/userQueries.js", () => ({
     getUserNameById: mockGetUserNameById,
   }));
 

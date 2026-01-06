@@ -1,24 +1,24 @@
 import type { Request, Response } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 
 type AllergiesHandlers = typeof import("../allergiesHandler.js");
 
-const mockAuthenticateUserId = jest.fn<(req: Request) => string | undefined>();
-const mockVerifyResourceOwnership = jest.fn<(resourceUserId: string, authenticatedUserId: string) => void>();
+const mockAuthenticateUserId = vi.fn<(req: Request) => string | undefined>();
+const mockVerifyResourceOwnership = vi.fn<(resourceUserId: string, authenticatedUserId: string) => void>();
 
-const mockGetGuestUser = jest.fn();
-const mockGetDishById = jest.fn();
+const mockGetGuestUser = vi.fn();
+const mockGetDishById = vi.fn();
 
-const mockGetGuestAllergies = jest.fn();
-const mockSetGuestAllergies = jest.fn();
-const mockGetDishAllergens = jest.fn();
-const mockSetDishAllergens = jest.fn();
+const mockGetGuestAllergies = vi.fn();
+const mockSetGuestAllergies = vi.fn();
+const mockGetDishAllergens = vi.fn();
+const mockSetDishAllergens = vi.fn();
 
 let handlers: AllergiesHandlers;
 
 function createMockResponse() {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -28,23 +28,23 @@ function createMockResponse() {
 }
 
 beforeEach(async () => {
-  jest.resetAllMocks();
-  jest.resetModules();
+  vi.resetAllMocks();
+  vi.resetModules();
 
-  jest.unstable_mockModule("../../../auth.js", () => ({
+  vi.mock("../../../auth.js", () => ({
     authenticateUserId: mockAuthenticateUserId,
     verifyResourceOwnership: mockVerifyResourceOwnership,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/guestQueries.js", () => ({
+  vi.mock("../../../db/queries/guestQueries.js", () => ({
     getGuestUser: mockGetGuestUser,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/dishQueries.js", () => ({
+  vi.mock("../../../db/queries/dishQueries.js", () => ({
     getDishById: mockGetDishById,
   }));
 
-  jest.unstable_mockModule("../../../db/queries/allergiesQueries.js", () => ({
+  vi.mock("../../../db/queries/allergiesQueries.js", () => ({
     getGuestAllergies: mockGetGuestAllergies,
     setGuestAllergies: mockSetGuestAllergies,
     getDishAllergens: mockGetDishAllergens,

@@ -1,11 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { errorHandler } from "../errorHandler.js";
 import { HttpError } from "../../errors.js";
 
 function createMockResponse() {
-  const json = jest.fn();
-  const status = jest.fn().mockReturnThis();
+  const json = vi.fn();
+  const status = vi.fn().mockReturnThis();
   const res = {
     status,
     json,
@@ -15,7 +15,7 @@ function createMockResponse() {
 }
 
 function createNextMock() {
-  const nextMock = jest.fn();
+  const nextMock = vi.fn();
   return {
     next: nextMock as unknown as NextFunction,
     nextMock,
@@ -39,7 +39,7 @@ describe("errorHandler middleware", () => {
     const { res, status, json } = createMockResponse();
     const { next, nextMock } = createNextMock();
     const err = new Error("Boom");
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     errorHandler(err, {} as Request, res, next);
 
@@ -66,7 +66,7 @@ describe("errorHandler middleware", () => {
     const { res, status, json } = createMockResponse();
     const { next, nextMock } = createNextMock();
     const err = new HttpError(503, "Service exploded");
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     errorHandler(err, {} as Request, res, next);
 

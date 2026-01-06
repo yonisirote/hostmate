@@ -1,4 +1,4 @@
-import { jest } from "@jest/globals";
+import { vi } from "vitest";
 import { createClient } from "@libsql/client";
 import fs from "fs";
 import os from "os";
@@ -146,8 +146,8 @@ describe("allergiesQueries", () => {
   }
 
   beforeEach(async () => {
-    jest.resetAllMocks();
-    jest.resetModules();
+    vi.resetAllMocks();
+    vi.resetModules();
 
     dbPath = path.join(
       os.tmpdir(),
