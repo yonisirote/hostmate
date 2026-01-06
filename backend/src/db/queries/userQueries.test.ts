@@ -153,6 +153,7 @@ describe("userQueries", () => {
     const before = Date.now();
     const [row] = await userQueries.saveRefreshToken("t1", "u1");
 
+    expect(row).toBeDefined();
     expect(row).toMatchObject({
       token: "t1",
       userId: "u1",
