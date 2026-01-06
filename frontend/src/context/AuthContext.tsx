@@ -13,13 +13,35 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
+    let storedUser: string | null = null;
+    try {
+      storedUser = localStorage.getItem('user');
+    } catch {
+      // localStorage may be unavailable (e.g., private browsing on some mobile browsers)
+      setIsLoading(false);
+      return;
+    }
+
     if (!storedUser) {
       setIsLoading(false);
       return;
     }
 
-    setUser(JSON.parse(storedUser) as User);
+    let parsedUser: User;
+    try {
+      parsedUser = JSON.parse(storedUser) as User;
+    } catch {
+      // Corrupted data in localStorage
+      try {
+        localStorage.removeItem('user');
+      } catch {
+        // Ignore if removal fails
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    setUser(parsedUser);
 
     const checkAuth = async () => {
       try {
@@ -30,7 +52,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
           throw new Error('Missing access token');
         }
       } catch {
-        localStorage.removeItem('user');
+        try {
+          localStorage.removeItem('user');
+        } catch {
+          // Ignore if removal fails
+        }
         setAccessToken(null);
         setUser(null);
       } finally {
@@ -44,7 +70,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = (userData: User, token: string) => {
     setUser(userData);
     setAccessToken(token);
-    localStorage.setItem('user', JSON.stringify(userData));
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch {
+      // localStorage may be unavailable or full
+    }
   };
 
   const logout = async () => {
@@ -55,7 +85,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
     setUser(null);
     setAccessToken(null);
-    localStorage.removeItem('user');
+    try {
+      localStorage.removeItem('user');
+    } catch {
+      // Ignore if removal fails
+    }
     window.location.href = '/login';
   };
 
