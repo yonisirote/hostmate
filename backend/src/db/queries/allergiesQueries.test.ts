@@ -1,5 +1,8 @@
 import { jest } from "@jest/globals";
 import { createClient } from "@libsql/client";
+import fs from "fs";
+import os from "os";
+import path from "path";
 
 type AllergiesQueriesModule = typeof import("./allergiesQueries.js");
 
@@ -9,6 +12,7 @@ function iso(date: string) {
 
 describe("allergiesQueries", () => {
   let client: ReturnType<typeof createClient>;
+  let dbPath: string;
   let allergiesQueries: AllergiesQueriesModule;
 
   async function exec(sql: string, args: unknown[] = []) {
@@ -145,7 +149,12 @@ describe("allergiesQueries", () => {
     jest.resetAllMocks();
     jest.resetModules();
 
-    client = createClient({ url: ":memory:" });
+    dbPath = path.join(
+      os.tmpdir(),
+      `hostmate_allergies_${process.pid}_${Date.now()}_${Math.random().toString(16).slice(2)}.db`,
+    );
+
+    client = createClient({ url: `file:${dbPath}` });
 
     const { resetTestDbClient } = await import("../dbConfig.js");
     resetTestDbClient(client);
@@ -161,6 +170,11 @@ describe("allergiesQueries", () => {
 
   afterEach(() => {
     client?.close();
+    try {
+      fs.unlinkSync(dbPath);
+    } catch {
+      // ignore
+    }
   });
 
   test("getGuestAllergies returns empty when none", async () => {
