@@ -176,7 +176,7 @@ describe("loginHandler", () => {
       expect.objectContaining({
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
       }),
     );
     expect(status).toHaveBeenCalledWith(200);
@@ -350,7 +350,7 @@ describe("revokeHandler", () => {
       expect.objectContaining({
         httpOnly: true,
         secure: false,
-        sameSite: "strict",
+        sameSite: "lax",
       }),
     );
     expect(status).toHaveBeenCalledWith(204);

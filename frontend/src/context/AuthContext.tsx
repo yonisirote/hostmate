@@ -14,8 +14,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const { data } = await api.post('/auth/refresh');
+        try {
+          const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
         if (data.accessToken) {
           setAccessToken(data.accessToken);
 

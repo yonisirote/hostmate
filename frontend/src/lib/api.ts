@@ -42,7 +42,7 @@ api.interceptors.response.use(
 
       try {
         // Try to refresh the token
-        const { data } = await api.post('/auth/refresh');
+        const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
         const newAccessToken = data.accessToken;
 
         setAccessToken(newAccessToken);

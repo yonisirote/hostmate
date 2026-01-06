@@ -21,11 +21,22 @@ const __dirname = path.resolve();
 app.use(express.json());
 app.use(cookieParser());
 
-if (!config.isProd){
-  app.use(cors({
-    origin: "http://localhost:5173",
-    credentials: true,
-  }));
+if (!config.isProd) {
+  app.use(
+    cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+    })
+  );
+} else {
+  // In prod, the frontend is served from the same origin,
+  // but we still enable CORS + credentials for safety.
+  app.use(
+    cors({
+      origin: true,
+      credentials: true,
+    })
+  );
 }
 
 app.use("/api/auth", authRouter);

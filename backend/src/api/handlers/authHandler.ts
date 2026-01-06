@@ -60,8 +60,8 @@ export async function loginHandler(req: Request, res: Response) {
   res.status(200).
     cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'strict',
+      secure: config.isProd,
+      sameSite: config.isProd ? "none" : "lax",
       maxAge: config.jwt.refreshExpiry * 1000, // maxAge is ms, refreshExpiry is in seconds
     }).
     json({
@@ -98,8 +98,8 @@ export async function revokeHandler(req: Request, res: Response) {
   await revokeRefreshToken(refreshToken);
   res.clearCookie("refreshToken", {
     httpOnly: true,
-    secure: false,
-    sameSite: "strict",
+    secure: config.isProd,
+    sameSite: config.isProd ? "none" : "lax",
   });
   res.status(204).send();
 }
