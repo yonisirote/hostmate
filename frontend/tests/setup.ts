@@ -32,9 +32,22 @@ Object.assign(globalThis, {
 });
 
 // localStorage shim.
-// Note: Node 25+ may emit a `--localstorage-file` warning when experimental
-// web storage is initialized without a persistence path (observed via MSW).
-// We set `NODE_OPTIONS=--localstorage-file=...` in npm scripts to avoid it.
+// Note: Node 25+ may emit a noisy `--localstorage-file` warning when
+// experimental web storage is initialized without a persistence path.
+// Avoid relying on `NODE_OPTIONS` (CI restricts allowed flags) and instead
+// filter the specific warning line from Vitest output.
+const originalStderrWrite = process.stderr.write.bind(process.stderr);
+process.stderr.write = (chunk, encoding, callback) => {
+  const text = typeof chunk === 'string' ? chunk : chunk.toString('utf8');
+  if (text.includes('--localstorage-file') && text.includes('was provided without a valid path')) {
+    if (typeof callback === 'function') callback();
+    return true;
+  }
+
+  // @ts-expect-error - Node's stderr.write has multiple overloads
+  return originalStderrWrite(chunk, encoding, callback);
+};
+
 const store = new Map<string, string>();
 Object.defineProperty(globalThis, 'localStorage', {
   value: {
