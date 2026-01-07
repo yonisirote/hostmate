@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { Users, UtensilsCrossed, Calendar, PlusCircle, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 
-import type { Meal } from '../types';
-
 import { useAuth } from '../context/useAuth';
 import { useMeals } from '../hooks/useMeals';
 

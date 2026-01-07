@@ -1,7 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import type { Guest, Meal } from '../types';
-
 import {
   addMealGuests,
   createMeal,

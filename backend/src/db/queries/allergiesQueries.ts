@@ -53,8 +53,10 @@ export async function getGuestAllergiesMap(guestIds: string[]) {
   }
 
   for (const row of rows) {
-    map[row.guestId] ??= [];
-    map[row.guestId].push(row.allergy);
+    const allergies = map[row.guestId];
+    if (allergies) {
+      allergies.push(row.allergy);
+    }
   }
 
   return map;
@@ -76,8 +78,10 @@ export async function getDishAllergensMap(dishIds: string[]) {
   }
 
   for (const row of rows) {
-    map[row.dishId] ??= [];
-    map[row.dishId].push(row.allergy);
+    const allergens = map[row.dishId];
+    if (allergens) {
+      allergens.push(row.allergy);
+    }
   }
 
   return map;
