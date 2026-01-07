@@ -3,6 +3,8 @@ import { vi } from "vitest";
 
 type AllergiesHandlers = typeof import("../allergiesHandler.js");
 
+type GuestAllergyMap = Record<string, string[]>;
+
 const mockAuthenticateUserId = vi.fn<(req: Request) => string | undefined>();
 const mockVerifyResourceOwnership = vi.fn<(resourceUserId: string, authenticatedUserId: string) => void>();
 
@@ -12,6 +14,8 @@ const mockGetDishById = vi.fn();
 const mockGetGuestAllergies = vi.fn();
 const mockSetGuestAllergies = vi.fn();
 const mockGetDishAllergens = vi.fn();
+const mockGetGuestAllergiesMap = vi.fn();
+const mockGetDishAllergensMap = vi.fn();
 const mockSetDishAllergens = vi.fn();
 
 let handlers: AllergiesHandlers;
@@ -46,8 +50,10 @@ beforeEach(async () => {
 
   vi.mock("../../../db/queries/allergiesQueries.js", () => ({
     getGuestAllergies: mockGetGuestAllergies,
+    getGuestAllergiesMap: mockGetGuestAllergiesMap,
     setGuestAllergies: mockSetGuestAllergies,
     getDishAllergens: mockGetDishAllergens,
+    getDishAllergensMap: mockGetDishAllergensMap,
     setDishAllergens: mockSetDishAllergens,
   }));
 
@@ -207,6 +213,48 @@ describe("allergiesHandler", () => {
       statusCode: 404,
       message: "Dish not found.",
     });
+  });
+
+  test("getGuestAllergiesMapHandler throws when guestIds missing", async () => {
+    mockAuthenticateUserId.mockReturnValue("user-1");
+
+    const req = { query: {} } as unknown as Request;
+    const { res } = createMockResponse();
+
+    const promise = handlers.getGuestAllergiesMapHandler(req, res);
+
+    await expect(promise).rejects.toMatchObject({
+      statusCode: 400,
+      message: "guestIds must be a comma-separated string",
+    });
+  });
+
+  test("getGuestAllergiesMapHandler returns map", async () => {
+    mockAuthenticateUserId.mockReturnValue("user-1");
+    mockGetGuestAllergiesMap.mockResolvedValue({ g_1: ["peanuts"] } satisfies GuestAllergyMap);
+
+    const req = { query: { guestIds: "g_1" } } as unknown as Request;
+    const { res, status, json } = createMockResponse();
+
+    await handlers.getGuestAllergiesMapHandler(req, res);
+
+    expect(mockGetGuestAllergiesMap).toHaveBeenCalledWith(["g_1"]);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({ g_1: ["peanuts"] });
+  });
+
+  test("getDishAllergensMapHandler returns map", async () => {
+    mockAuthenticateUserId.mockReturnValue("user-1");
+    mockGetDishAllergensMap.mockResolvedValue({ d_1: ["eggs"] } satisfies GuestAllergyMap);
+
+    const req = { query: { dishIds: "d_1" } } as unknown as Request;
+    const { res, status, json } = createMockResponse();
+
+    await handlers.getDishAllergensMapHandler(req, res);
+
+    expect(mockGetDishAllergensMap).toHaveBeenCalledWith(["d_1"]);
+    expect(status).toHaveBeenCalledWith(200);
+    expect(json).toHaveBeenCalledWith({ d_1: ["eggs"] });
   });
 
   test("setDishAllergensHandler persists and returns parsed list", async () => {

@@ -1,6 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { api, setAccessToken } from '../lib/api';
-import { User } from '../types';
+
+import type { User } from '../types';
+
+import { refresh, revoke } from '../api/auth';
+import { onAuthFailure, setAccessToken } from '../lib/api';
 
 import { AuthContext } from './auth-context';
 
@@ -43,14 +46,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
     setUser(parsedUser);
 
+    const unsubscribe = onAuthFailure(() => {
+      try {
+        localStorage.removeItem('user');
+      } catch {
+        // Ignore if removal fails
+      }
+      setAccessToken(null);
+      setUser(null);
+    });
+
     const checkAuth = async () => {
       try {
-        const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
-        if (data.accessToken) {
-          setAccessToken(data.accessToken);
-        } else {
-          throw new Error('Missing access token');
-        }
+        const data = await refresh();
+        setAccessToken(data.accessToken);
       } catch {
         try {
           localStorage.removeItem('user');
@@ -64,7 +73,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
     };
 
-    checkAuth();
+    void checkAuth();
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const login = (userData: User, token: string) => {
@@ -79,7 +92,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const logout = async () => {
     try {
-      await api.post('/auth/revoke');
+      await revoke();
     } catch (e) {
       console.error('Logout failed', e);
     }

@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:ui": "vitest --ui"
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --localstorage-file=/tmp/hostmate-vitest-localstorage-$PPID\" vitest",
+    "test:run": "NODE_OPTIONS=\"$NODE_OPTIONS --localstorage-file=/tmp/hostmate-vitest-localstorage-$PPID\" vitest run",
+    "test:ui": "NODE_OPTIONS=\"$NODE_OPTIONS --localstorage-file=/tmp/hostmate-vitest-localstorage-$PPID\" vitest --ui"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.16",

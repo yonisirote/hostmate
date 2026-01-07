@@ -3,7 +3,14 @@ import type { Request, Response } from "express";
 import { authenticateUserId, verifyResourceOwnership } from "../../auth.js";
 import { HttpError } from "../errors.js";
 import { ALLERGIES, type Allergy } from "../../db/schema.js";
-import { getDishAllergens, getGuestAllergies, setDishAllergens, setGuestAllergies } from "../../db/queries/allergiesQueries.js";
+import {
+  getDishAllergens,
+  getDishAllergensMap,
+  getGuestAllergies,
+  getGuestAllergiesMap,
+  setDishAllergens,
+  setGuestAllergies,
+} from "../../db/queries/allergiesQueries.js";
 import { getDishById } from "../../db/queries/dishQueries.js";
 import { getGuestUser } from "../../db/queries/guestQueries.js";
 
@@ -93,6 +100,46 @@ export async function getDishAllergensHandler(req: Request, res: Response) {
 
   const allergens = await getDishAllergens(dishId);
   res.status(200).json(allergens);
+}
+
+export async function getGuestAllergiesMapHandler(req: Request, res: Response) {
+  const userId = authenticateUserId(req);
+  if (!userId) {
+    throw new HttpError(401, "Unauthorized");
+  }
+
+  const guestIds = req.query.guestIds;
+  if (typeof guestIds !== "string") {
+    throw new HttpError(400, "guestIds must be a comma-separated string");
+  }
+
+  const ids = guestIds
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  const map = await getGuestAllergiesMap(ids);
+  res.status(200).json(map);
+}
+
+export async function getDishAllergensMapHandler(req: Request, res: Response) {
+  const userId = authenticateUserId(req);
+  if (!userId) {
+    throw new HttpError(401, "Unauthorized");
+  }
+
+  const dishIds = req.query.dishIds;
+  if (typeof dishIds !== "string") {
+    throw new HttpError(400, "dishIds must be a comma-separated string");
+  }
+
+  const ids = dishIds
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  const map = await getDishAllergensMap(ids);
+  res.status(200).json(map);
 }
 
 export async function setDishAllergensHandler(req: Request, res: Response) {

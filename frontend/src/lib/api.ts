@@ -18,6 +18,23 @@ export function setAccessToken(token: string | null) {
   accessToken = token;
 }
 
+type AuthFailureListener = () => void;
+
+const authFailureListeners = new Set<AuthFailureListener>();
+
+export function onAuthFailure(listener: AuthFailureListener) {
+  authFailureListeners.add(listener);
+  return () => {
+    authFailureListeners.delete(listener);
+  };
+}
+
+function notifyAuthFailure() {
+  for (const listener of authFailureListeners) {
+    listener();
+  }
+}
+
 // Request interceptor to add bearer token
 api.interceptors.request.use((config) => {
   if (accessToken) {
@@ -37,7 +54,7 @@ api.interceptors.response.use(
 
     // If error is 401 and we haven't tried to refresh yet
     // Note: public token endpoints should not force-refresh or redirect.
-    if (error.response?.status === 401 && !originalRequest._retry && !isPublicTokenEndpoint) {
+    if (error.response?.status === 401 && !originalRequest?._retry && !isPublicTokenEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -51,9 +68,8 @@ api.interceptors.response.use(
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, redirect to login (or handle as needed)
         setAccessToken(null);
-        window.location.href = '/login';
+        notifyAuthFailure();
         return Promise.reject(refreshError);
       }
     }

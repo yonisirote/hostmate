@@ -149,6 +149,24 @@ export function createHandlers(db: Db) {
     }),
 
     // Guest allergies
+    http.get('/api/allergies/guests', ({ request }) => {
+      const unauthorized = requireAuth(request);
+      if (unauthorized) return unauthorized;
+
+      const url = new URL(request.url);
+      const guestIds = url.searchParams.get('guestIds') ?? '';
+      const ids = guestIds
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+
+      const result: Record<string, Allergy[]> = {};
+      for (const id of ids) {
+        result[id] = db.guestAllergies[id] ?? [];
+      }
+      return json(result);
+    }),
+
     http.get('/api/allergies/guests/:guestId', ({ request, params }) => {
       const unauthorized = requireAuth(request);
       if (unauthorized) return unauthorized;
@@ -214,6 +232,24 @@ export function createHandlers(db: Db) {
     }),
 
     // Dish allergens
+    http.get('/api/allergies/dishes', ({ request }) => {
+      const unauthorized = requireAuth(request);
+      if (unauthorized) return unauthorized;
+
+      const url = new URL(request.url);
+      const dishIds = url.searchParams.get('dishIds') ?? '';
+      const ids = dishIds
+        .split(',')
+        .map((id) => id.trim())
+        .filter(Boolean);
+
+      const result: Record<string, Allergy[]> = {};
+      for (const id of ids) {
+        result[id] = db.dishAllergens[id] ?? [];
+      }
+      return json(result);
+    }),
+
     http.get('/api/allergies/dishes/:dishId', ({ request, params }) => {
       const unauthorized = requireAuth(request);
       if (unauthorized) return unauthorized;

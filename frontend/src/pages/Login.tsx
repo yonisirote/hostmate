@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { useAuth } from '../context/useAuth';
-import { api } from '../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+
+import { login as loginRequest, toUser } from '../api/auth';
+import { useAuth } from '../context/useAuth';
 
 export function Login() {
   const [username, setUsername] = useState('');
@@ -13,12 +14,8 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { data } = await api.post('/auth/login', { username, password });
-      // Pass both user data and access token to login function
-      login(
-          { id: data.userID, name: data.name, username: data.username },
-          data.accessToken
-      );
+      const data = await loginRequest({ username, password });
+      login(toUser(data), data.accessToken);
       navigate('/');
     } catch {
       toast.error('Invalid credentials');

@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { api } from '../lib/api';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
+
+import { signup } from '../api/auth';
 
 export function Signup() {
   const [name, setName] = useState('');
@@ -12,7 +13,7 @@ export function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/auth/signup', { name, username, password });
+      await signup({ name, username, password });
       toast.success('Account created! Please log in.');
       navigate('/login');
     } catch {

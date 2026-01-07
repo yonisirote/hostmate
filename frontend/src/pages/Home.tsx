@@ -1,31 +1,32 @@
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
 import { Users, UtensilsCrossed, Calendar, PlusCircle, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
-import { Meal } from '../types';
+
+import type { Meal } from '../types';
+
+import { useAuth } from '../context/useAuth';
+import { useMeals } from '../hooks/useMeals';
 
 export function Home() {
   const { user } = useAuth();
-  
-  const { data: meals } = useQuery<Meal[]>({
-    queryKey: ['meals'],
-    queryFn: async () => {
-      const { data } = await api.get('/meals');
-      return data;
-    },
-  });
 
-  // Get upcoming meal (closest future date)
-  const upcomingMeal = meals
-    ?.filter(m => new Date(m.date) >= new Date())
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  const { data: meals } = useMeals();
 
-  const recentMeals = meals
-    ?.filter(m => new Date(m.date) < new Date())
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 3);
+  const now = useMemo(() => new Date(), []);
+
+  const upcomingMeal = useMemo(() => {
+    return meals
+      ?.filter((meal) => new Date(meal.date) >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  }, [meals, now]);
+
+  const recentMeals = useMemo(() => {
+    return meals
+      ?.filter((meal) => new Date(meal.date) < now)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 3);
+  }, [meals, now]);
 
   return (
     <div className="space-y-12">

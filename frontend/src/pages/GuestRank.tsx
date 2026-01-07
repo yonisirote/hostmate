@@ -1,66 +1,31 @@
 import { useParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '../lib/api';
-import type { Dish, Guest } from '../types';
-import { Star } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
+import { Star } from 'lucide-react';
 
-type GuestRankPayload = {
-  guest: Guest;
-  dishes: Array<Dish & { rank: number | null }>;
-  hostName: string;
-};
+import { useGuestRankByToken, useRankDish } from '../hooks/useGuestRank';
 
 export function GuestRank() {
   const { rankToken } = useParams<{ rankToken: string }>();
-  const queryClient = useQueryClient();
 
-  // Queries
-  const { data, isLoading, error } = useQuery<GuestRankPayload>({
-    queryKey: ['guestRank', rankToken],
-    enabled: Boolean(rankToken),
-    queryFn: async () => {
-      const { data } = await api.get(`/guests/token/${rankToken}`);
-      return data;
-    },
-    retry: false,
-  });
+  const { data, isLoading, error } = useGuestRankByToken(rankToken ?? '');
+  const rankMutation = useRankDish(rankToken);
 
-  const rankMutation = useMutation({
-    mutationFn: async ({ dishId, rank }: { dishId: string; rank: number }) => {
-      await api.post(`/guests/token/${rankToken}/dishes/${dishId}`, { rank });
-    },
-    onMutate: async ({ dishId, rank }) => {
-      if (!rankToken) return;
+  const saveRank = async (dishId: string, rank: number) => {
+    if (!rankToken) return;
 
-      await queryClient.cancelQueries({ queryKey: ['guestRank', rankToken] });
-      const previous = queryClient.getQueryData<GuestRankPayload>(['guestRank', rankToken]);
-
-      queryClient.setQueryData<GuestRankPayload>(['guestRank', rankToken], (current) => {
-        if (!current) return current;
-        return {
-          ...current,
-          dishes: current.dishes.map((dish) => (dish.id === dishId ? { ...dish, rank } : dish)),
-        };
-      });
-
-      return { previous };
-    },
-    onError: (_error, _variables, context) => {
-      if (rankToken && context?.previous) {
-        queryClient.setQueryData(['guestRank', rankToken], context.previous);
+    rankMutation.mutate(
+      { dishId, rank },
+      {
+        onSuccess: () => {
+          toast.success('Saved');
+        },
+        onError: () => {
+          toast.error('Failed to save ranking');
+        },
       }
-      toast.error('Failed to save ranking');
-    },
-    onSuccess: () => {
-      toast.success('Saved');
-    },
-    onSettled: async () => {
-      if (!rankToken) return;
-      await queryClient.invalidateQueries({ queryKey: ['guestRank', rankToken] });
-    },
-  });
+    );
+  };
 
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-warm-50 text-warm-600">Loading...</div>;
@@ -120,8 +85,8 @@ export function GuestRank() {
                               key={star}
                               type="button"
                               disabled={rankMutation.isPending}
-                              onClick={() => {
-                                rankMutation.mutate({ dishId: dish.id, rank: star });
+                              onClick={async () => {
+                                await saveRank(dish.id, star);
                               }}
                               className={clsx(
                                 'p-2 rounded-full focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed',

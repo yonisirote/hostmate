@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import { db } from "../dbConfig.js";
 import { dishAllergensTable, guestAllergiesTable, mealGuestsTable, type Allergy } from "../schema.js";
@@ -35,6 +35,52 @@ export async function getDishAllergens(dishId: string) {
     .where(eq(dishAllergensTable.dishId, dishId));
 
   return rows.map((row) => row.allergy);
+}
+
+export async function getGuestAllergiesMap(guestIds: string[]) {
+  if (guestIds.length === 0) {
+    return {} as Record<string, Allergy[]>;
+  }
+
+  const rows = await db
+    .select({ guestId: guestAllergiesTable.guestId, allergy: guestAllergiesTable.allergy })
+    .from(guestAllergiesTable)
+    .where(inArray(guestAllergiesTable.guestId, guestIds));
+
+  const map: Record<string, Allergy[]> = {};
+  for (const guestId of guestIds) {
+    map[guestId] = [];
+  }
+
+  for (const row of rows) {
+    map[row.guestId] ??= [];
+    map[row.guestId].push(row.allergy);
+  }
+
+  return map;
+}
+
+export async function getDishAllergensMap(dishIds: string[]) {
+  if (dishIds.length === 0) {
+    return {} as Record<string, Allergy[]>;
+  }
+
+  const rows = await db
+    .select({ dishId: dishAllergensTable.dishId, allergy: dishAllergensTable.allergy })
+    .from(dishAllergensTable)
+    .where(inArray(dishAllergensTable.dishId, dishIds));
+
+  const map: Record<string, Allergy[]> = {};
+  for (const dishId of dishIds) {
+    map[dishId] = [];
+  }
+
+  for (const row of rows) {
+    map[row.dishId] ??= [];
+    map[row.dishId].push(row.allergy);
+  }
+
+  return map;
 }
 
 export async function setDishAllergens(dishId: string, allergies: Allergy[]) {

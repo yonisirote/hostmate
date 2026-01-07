@@ -1,130 +1,47 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { api } from '../lib/api';
-import { Meal, Guest, Menu } from '../types';
-import { Plus, Pencil, Trash2, Calendar, Users as UsersIcon, ChefHat, AlertTriangle, X } from 'lucide-react';
-import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
+import { Plus, Pencil, Trash2, Calendar, Users as UsersIcon, ChefHat, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+
+import type { Meal } from '../types';
+
+import { Modal } from '../components/Modal';
+import { ModalActions } from '../components/ModalActions';
+import { useGuests } from '../hooks/useGuests';
+import { useMealGuests, useMealMenu, useMealMutations, useMeals } from '../hooks/useMeals';
 
 export function Meals() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const queryClient = useQueryClient();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(searchParams.get('id'));
 
-  // Sync URL with selected meal
-  useEffect(() => {
-    if (selectedMealId) {
-      setSearchParams({ id: selectedMealId });
+  const { data: meals, isLoading: isLoadingMeals } = useMeals();
+  const { data: guests } = useGuests();
+
+  const { data: mealGuests } = useMealGuests(selectedMealId);
+  const { data: menu, isLoading: isLoadingMenu } = useMealMenu(selectedMealId, false);
+
+  const { addMeal, updateMealById, deleteMealById, updateMealGuests } = useMealMutations();
+
+  const selectedMeal = useMemo(() => meals?.find((meal) => meal.id === selectedMealId), [meals, selectedMealId]);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingMeal(null);
+  };
+
+  const selectMealById = (mealId: string | null) => {
+    setSelectedMealId(mealId);
+    if (mealId) {
+      setSearchParams({ id: mealId });
     } else {
       setSearchParams({});
     }
-  }, [selectedMealId, setSearchParams]);
-
-  // Queries
-  const { data: meals, isLoading: isLoadingMeals } = useQuery<Meal[]>({
-    queryKey: ['meals'],
-    queryFn: async () => {
-      const { data } = await api.get('/meals');
-      return data;
-    },
-  });
-
-  const { data: guests } = useQuery<Guest[]>({
-    queryKey: ['guests'],
-    queryFn: async () => {
-      const { data } = await api.get('/guests');
-      return data;
-    },
-  });
-
-  // Selected Meal Details
-  const { data: mealGuests } = useQuery<Guest[]>({
-    queryKey: ['mealGuests', selectedMealId],
-    queryFn: async () => {
-      if (!selectedMealId) return [];
-      const { data } = await api.get(`/meals/${selectedMealId}`);
-      return data;
-    },
-    enabled: !!selectedMealId,
-  });
-
-  const { data: menu, isLoading: isLoadingMenu } = useQuery<Menu>({
-    queryKey: ['mealMenu', selectedMealId],
-    queryFn: async () => {
-      if (!selectedMealId) return { main: [], side: [], dessert: [], other: [] };
-      const { data } = await api.get(`/meals/${selectedMealId}/menu?includeUnsafe=false`);
-      return data;
-    },
-    enabled: !!selectedMealId,
-  });
-
-  // Mutations
-  const addMealMutation = useMutation({
-    mutationFn: async (data: Partial<Meal>) => {
-      return await api.post('/meals', data);
-    },
-    onSuccess: (res) => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
-      setIsModalOpen(false);
-      toast.success('Meal created!');
-      setSelectedMealId(res.data.id);
-    },
-  });
-
-  const updateMealMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Meal> }) => {
-      await api.put(`/meals/${id}`, data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
-      setIsModalOpen(false);
-      setEditingMeal(null);
-      toast.success('Meal updated!');
-    },
-  });
-
-  const deleteMealMutation = useMutation({
-    mutationFn: async (id: string) => {
-      await api.delete(`/meals/${id}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meals'] });
-      if (selectedMealId) setSelectedMealId(null);
-      toast.success('Meal deleted.');
-    },
-  });
-
-  const updateMealGuestsMutation = useMutation({
-    mutationFn: async ({ mealId, guestIds }: { mealId: string; guestIds: string[] }) => {
-      // Since API is additive/subtractive, we need to diff.
-      // But API has bulk add. Removing is one by one.
-      // Let's rely on a simpler approach: 
-      // 1. Get current guests (already have in `mealGuests`)
-      // 2. Identify to add and to remove
-      
-      const currentIds = mealGuests?.map(g => g.id) || [];
-      const toAdd = guestIds.filter(id => !currentIds.includes(id));
-      const toRemove = currentIds.filter(id => !guestIds.includes(id));
-
-      if (toAdd.length) {
-        await api.post(`/meals/${mealId}`, { guestIds: toAdd });
-      }
-      
-      // Parallel deletes
-      await Promise.all(toRemove.map(gid => api.delete(`/meals/${mealId}/guests/${gid}`)));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['mealGuests'] });
-      queryClient.invalidateQueries({ queryKey: ['mealMenu'] });
-      toast.success('Guest list updated!');
-    },
-  });
-
-  const selectedMeal = meals?.find((m) => m.id === selectedMealId);
+  };
 
   return (
     <div className="flex flex-col lg:flex-row h-[calc(100vh-8rem)] gap-6">
@@ -149,7 +66,7 @@ export function Meals() {
             meals?.sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map(meal => (
               <div 
                 key={meal.id}
-                onClick={() => setSelectedMealId(meal.id)}
+                onClick={() => selectMealById(meal.id)}
                 className={clsx(
                   "cursor-pointer p-4 rounded-lg border transition-all hover:shadow-md",
                   selectedMealId === meal.id
@@ -174,7 +91,19 @@ export function Meals() {
                           <Pencil className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); if(confirm('Delete meal?')) deleteMealMutation.mutate(meal.id); }} 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (confirm('Delete meal?')) {
+                              deleteMealById.mutate(meal.id, {
+                                onSuccess: () => {
+                                  if (selectedMealId === meal.id) {
+                                    selectMealById(null);
+                                  }
+                                  toast.success('Meal deleted.');
+                                },
+                              });
+                            }
+                          }}
                           className="p-1 text-gray-400 hover:text-red-600"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -225,7 +154,18 @@ export function Meals() {
                                  const newIds = e.target.checked 
                                    ? [...currentIds, guest.id]
                                    : currentIds.filter(id => id !== guest.id);
-                                 updateMealGuestsMutation.mutate({ mealId: selectedMeal.id, guestIds: newIds });
+                                  updateMealGuests.mutate(
+                                    {
+                                      mealId: selectedMeal.id,
+                                      guestIds: newIds,
+                                      currentGuestIds: currentIds,
+                                    },
+                                    {
+                                      onSuccess: () => {
+                                        toast.success('Guest list updated!');
+                                      },
+                                    }
+                                  );
                               }}
                               className="h-4 w-4 text-warm-600 focus:ring-warm-500 border-gray-300 rounded"
                             />
@@ -298,13 +238,19 @@ export function Meals() {
        {isModalOpen && (
         <MealModal
           meal={editingMeal}
-          onClose={() => setIsModalOpen(false)}
+          onClose={closeModal}
           onSave={async (data) => {
             if (editingMeal) {
-              await updateMealMutation.mutateAsync({ id: editingMeal.id, data });
-            } else {
-              await addMealMutation.mutateAsync(data);
+              await updateMealById.mutateAsync({ id: editingMeal.id, data });
+              toast.success('Meal updated!');
+              closeModal();
+              return;
             }
+
+            const created = await addMeal.mutateAsync(data);
+            toast.success('Meal created!');
+            closeModal();
+            selectMealById(created.id);
           }}
         />
       )}
@@ -312,14 +258,14 @@ export function Meals() {
   );
 }
 
-function MealModal({ 
-  meal, 
-  onClose, 
-  onSave 
-}: { 
-  meal: Meal | null, 
-  onClose: () => void, 
-  onSave: (data: Partial<Meal>) => Promise<void> 
+function MealModal({
+  meal,
+  onClose,
+  onSave,
+}: {
+  meal: Meal | null;
+  onClose: () => void;
+  onSave: (data: { name: string; date: string; description: string | null }) => Promise<void>;
 }) {
   const [name, setName] = useState(meal?.name || '');
   const [date, setDate] = useState(meal?.date || format(new Date(), 'yyyy-MM-dd'));
@@ -341,77 +287,56 @@ function MealModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-[1px] transition-opacity" aria-hidden="true" onClick={onClose}></div>
-        <div className="relative inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <button type="button" onClick={onClose} className="absolute top-2 right-2 p-2 text-gray-400 hover:text-gray-600" aria-label="Close">
-            <X className="h-5 w-5" />
-          </button>
-          <div className="pt-6 text-center">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
-              {meal ? 'Edit Meal' : 'Plan New Meal'}
-            </h3>
+    <Modal title={meal ? 'Edit Meal' : 'Plan New Meal'} onClose={onClose} footerInside>
+      <form onSubmit={handleSubmit}>
+        <div className="mt-4 space-y-4">
+          <div className="text-left">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              required
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Summer BBQ"
+              className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+            />
           </div>
-          <form onSubmit={handleSubmit} className="mt-3">
-            <div className="text-center sm:mt-2">
-              <div className="mt-4 space-y-4">
-                <div className="text-left">
-                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-                  <input
-                    type="text"
-                    id="name"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Summer BBQ"
-                    className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-                  />
-                </div>
 
-                <div className="text-left">
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700">Date</label>
-                  <input
-                    type="date"
-                    id="date"
-                    required
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-                  />
-                </div>
+          <div className="text-left">
+            <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+              Date
+            </label>
+            <input
+              type="date"
+              id="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+            />
+          </div>
 
-                <div className="text-left">
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description</label>
-                  <textarea
-                    id="description"
-                    rows={3}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-warm-600 text-base font-medium text-white hover:bg-warm-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-500 sm:col-start-2 sm:text-sm disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                type="button"
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-warm-500 sm:mt-0 sm:col-start-1 sm:text-sm"
-                onClick={onClose}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          <div className="text-left">
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+              Description
+            </label>
+            <textarea
+              id="description"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="mt-1 shadow-sm focus:ring-warm-500 focus:border-warm-500 block w-full sm:text-sm border-gray-300 rounded-md p-2 border"
+            />
+          </div>
+
+          <div className="mt-5 sm:mt-6">
+            <ModalActions submitLabel="Save" isSubmitting={isSaving} onCancel={onClose} />
+          </div>
         </div>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 }

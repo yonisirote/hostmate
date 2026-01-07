@@ -32,9 +32,9 @@ Object.assign(globalThis, {
 });
 
 // localStorage shim.
-// Note: MSW currently touches Node's experimental webstorage implementation,
-// which emits a noisy `--localstorage-file` warning. Keeping a stable shim here
-// avoids localStorage flakiness across runners.
+// Note: Node 25+ may emit a `--localstorage-file` warning when experimental
+// web storage is initialized without a persistence path (observed via MSW).
+// We set `NODE_OPTIONS=--localstorage-file=...` in npm scripts to avoid it.
 const store = new Map<string, string>();
 Object.defineProperty(globalThis, 'localStorage', {
   value: {
