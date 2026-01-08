@@ -20,4 +20,23 @@ describe('meals page', () => {
 
     expect(await screen.findByText('Suggested Menu')).toBeInTheDocument();
   });
+
+  it('updates menu based on per-category counts', async () => {
+    localStorage.setItem('user', JSON.stringify({ id: 'u_1', name: 'Host', username: 'host' }));
+
+    const user = userEvent.setup();
+    renderAppRoutes({ route: '/meals', routes: [{ path: '/meals', element: <Meals /> }] });
+
+    const mealRow = await screen.findByText('Friday Dinner');
+    await user.click(mealRow);
+
+    // default is 3, but MSW db only has 1 main
+    expect(await screen.findByText('Roast Chicken')).toBeInTheDocument();
+
+    const mainsInput = screen.getByLabelText('Mains');
+    await user.clear(mainsInput);
+    await user.type(mainsInput, '0');
+
+    expect(await screen.findByText('No suitable main found.')).toBeInTheDocument();
+  });
 });

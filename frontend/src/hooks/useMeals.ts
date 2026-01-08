@@ -10,6 +10,8 @@ import {
   removeMealGuest,
   updateMeal,
 } from '../api/meals';
+
+import type { MenuCounts } from '../types';
 import { queryKeys } from '../api/query-keys';
 
 export function useMeals() {
@@ -27,11 +29,13 @@ export function useMealGuests(mealId: string | null) {
   });
 }
 
-export function useMealMenu(mealId: string | null, includeUnsafe: boolean) {
+export function useMealMenu(mealId: string | null, includeUnsafe: boolean, counts?: Partial<MenuCounts>) {
   return useQuery({
-    queryKey: mealId ? queryKeys.meals.menu(mealId, includeUnsafe) : (['mealMenu', 'none', includeUnsafe] as const),
+    queryKey: mealId
+      ? [...queryKeys.meals.menu(mealId, includeUnsafe), counts] as const
+      : (['mealMenu', 'none', includeUnsafe, counts] as const),
     enabled: Boolean(mealId),
-    queryFn: () => getMealMenu(mealId!, includeUnsafe),
+    queryFn: () => getMealMenu(mealId!, includeUnsafe, counts),
   });
 }
 

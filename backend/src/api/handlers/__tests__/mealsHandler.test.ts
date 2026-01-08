@@ -274,6 +274,31 @@ describe("mealsHandler error handling", () => {
     });
   });
 
+  test("getMenuHandler supports per-category counts", async () => {
+    mockAuthenticateUserId.mockReturnValue("user-1");
+    mockGetMealById.mockResolvedValue({ id: "meal-1", userId: "user-1" });
+
+    mockGetMainMealRankings.mockResolvedValue([1, 2, 3]);
+    mockGetSideMealRankings.mockResolvedValue([1, 2, 3, 4, 5]);
+    mockGetDessertMealRankings.mockResolvedValue([1, 2]);
+    mockGetOtherMealRankings.mockResolvedValue([1, 2, 3, 4]);
+
+    const req = {
+      params: { mealId: "meal-1" },
+      query: { mainCount: "1", sideCount: "0", dessertCount: "2", otherCount: "4" },
+    } as unknown as Request;
+    const { res, json } = createMockResponse();
+
+    await handlers.getMenuHandler(req, res);
+
+    expect(json).toHaveBeenCalledWith({
+      main: [1],
+      side: [],
+      dessert: [1, 2],
+      other: [1, 2, 3, 4],
+    });
+  });
+
   test("deleteMealHandler throws when mealId missing", async () => {
     mockAuthenticateUserId.mockReturnValue("user-1");
 

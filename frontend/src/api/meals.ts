@@ -1,4 +1,4 @@
-import type { Guest, Meal, Menu } from '../types';
+import type { Guest, Meal, Menu, MenuCounts } from '../types';
 
 import { api } from '../lib/api';
 
@@ -25,9 +25,19 @@ export async function getMealGuests(mealId: string) {
   return data;
 }
 
-export async function getMealMenu(mealId: string, includeUnsafe: boolean) {
+export async function getMealMenu(
+  mealId: string,
+  includeUnsafe: boolean,
+  counts?: Partial<MenuCounts>
+) {
   const { data } = await api.get<Menu>(`/meals/${mealId}/menu`, {
-    params: { includeUnsafe: includeUnsafe ? 'true' : 'false' },
+    params: {
+      includeUnsafe: includeUnsafe ? 'true' : 'false',
+      mainCount: counts?.main,
+      sideCount: counts?.side,
+      dessertCount: counts?.dessert,
+      otherCount: counts?.other,
+    },
   });
   return data;
 }

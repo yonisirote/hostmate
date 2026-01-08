@@ -340,20 +340,27 @@ export function createHandlers(db: Db) {
       return json({ ok: true });
     }),
 
-    http.get('/api/meals/:mealId/menu', ({ request }) => {
-      const unauthorized = requireAuth(request);
-      if (unauthorized) return unauthorized;
+     http.get('/api/meals/:mealId/menu', ({ request }) => {
+       const unauthorized = requireAuth(request);
+       if (unauthorized) return unauthorized;
 
-      // Keep it simple: return one of each category
-      const byCategory = (category: Dish['category']) => db.dishes.filter((d) => d.category === category);
+       const url = new URL(request.url);
+       const mainCount = Number(url.searchParams.get('mainCount') ?? '1');
+       const sideCount = Number(url.searchParams.get('sideCount') ?? '1');
+       const dessertCount = Number(url.searchParams.get('dessertCount') ?? '1');
+       const otherCount = Number(url.searchParams.get('otherCount') ?? '1');
 
-      return json({
-        main: byCategory('main').slice(0, 1),
-        side: byCategory('side').slice(0, 1),
-        dessert: byCategory('dessert').slice(0, 1),
-        other: byCategory('other').slice(0, 1),
-      });
-    }),
+       // Keep it simple: return top N of each category
+       const byCategory = (category: Dish['category']) => db.dishes.filter((d) => d.category === category);
+
+       return json({
+         main: byCategory('main').slice(0, mainCount),
+         side: byCategory('side').slice(0, sideCount),
+         dessert: byCategory('dessert').slice(0, dessertCount),
+         other: byCategory('other').slice(0, otherCount),
+       });
+     }),
+
 
     // Public ranking endpoints
     http.get('/api/guests/token/:rankToken', ({ params }) => {

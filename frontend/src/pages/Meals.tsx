@@ -18,11 +18,18 @@ export function Meals() {
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(searchParams.get('id'));
 
+  const [menuCounts, setMenuCounts] = useState({
+    main: 3,
+    side: 3,
+    dessert: 3,
+    other: 3,
+  });
+
   const { data: meals, isLoading: isLoadingMeals } = useMeals();
   const { data: guests } = useGuests();
 
   const { data: mealGuests } = useMealGuests(selectedMealId);
-  const { data: menu, isLoading: isLoadingMenu } = useMealMenu(selectedMealId, false);
+  const { data: menu, isLoading: isLoadingMenu } = useMealMenu(selectedMealId, false, menuCounts);
 
   const { addMeal, updateMealById, deleteMealById, updateMealGuests } = useMealMutations();
 
@@ -190,32 +197,63 @@ export function Meals() {
                    </h2>
                 </div>
 
-                {isLoadingMenu ? (
-                  <div className="text-gray-500 italic">Calculating optimal menu...</div>
-                ) : (
-                  <div className="space-y-6">
-                    {(['main', 'side', 'dessert'] as const).map(category => {
-                      const dishes = menu?.[category] || [];
-                      return (
-                        <div key={category}>
-                          <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{category}s</h3>
-                          {dishes.length > 0 ? (
-                            <ul className="space-y-2">
-                              {dishes.map(dish => (
-                                <li key={dish.id} className="bg-warm-50 border border-warm-100 rounded-md p-3">
-                                  <div className="font-medium text-warm-900">{dish.name}</div>
-                                  {dish.description && <div className="text-xs text-gray-500 mt-1">{dish.description}</div>}
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="text-sm text-gray-400 italic">No suitable {category} found.</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                 {isLoadingMenu ? (
+
+                   <div className="text-gray-500 italic">Calculating optimal menu...</div>
+                 ) : (
+                   <div className="space-y-6">
+                     {([
+                       { key: 'main', title: 'Main' },
+                       { key: 'side', title: 'Side' },
+                       { key: 'dessert', title: 'Dessert' },
+                       { key: 'other', title: 'Other' },
+                     ] as const).map(({ key, title }) => {
+                       const dishes = menu?.[key] || [];
+                       const isDisabled = dishes.length === 0;
+                       return (
+                         <div key={key}>
+                           <div className="mb-2 flex items-center justify-between gap-3">
+                             <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">{title}</h3>
+                             <label className="flex items-center gap-2 text-xs text-gray-500">
+                               <span>showing</span>
+                               <input
+                                 aria-label={`${title}s`}
+                                 type="number"
+                                 min={0}
+                                 max={20}
+                                 disabled={isDisabled}
+                                 value={isDisabled ? 0 : menuCounts[key]}
+                                 onChange={(e) => {
+                                   const next = Number(e.target.value);
+                                   if (!Number.isFinite(next) || next < 0) return;
+                                   setMenuCounts((prev) => ({ ...prev, [key]: Math.min(20, Math.floor(next)) }));
+                                 }}
+                                 className={clsx(
+                                   "w-16 rounded-md border bg-white p-1.5 text-sm shadow-sm focus:border-warm-500 focus:ring-warm-500",
+                                   isDisabled ? "cursor-not-allowed border-gray-200 text-gray-300" : "border-gray-300"
+                                 )}
+                               />
+                             </label>
+                           </div>
+
+                           {dishes.length > 0 ? (
+                             <ul className="space-y-2">
+                               {dishes.map(dish => (
+                                 <li key={dish.id} className="bg-warm-50 border border-warm-100 rounded-md p-3">
+                                   <div className="font-medium text-warm-900">{dish.name}</div>
+                                   {dish.description && <div className="text-xs text-gray-500 mt-1">{dish.description}</div>}
+                                 </li>
+                               ))}
+                             </ul>
+                           ) : (
+                             <div className="text-sm text-gray-400 italic">No suitable {key} found.</div>
+                           )}
+                         </div>
+                       );
+                     })}
+                   </div>
+                 )}
+
                 
                 {mealGuests?.length === 0 && (
                   <div className="mt-4 p-3 bg-yellow-50 text-yellow-800 text-sm rounded-md flex items-start">

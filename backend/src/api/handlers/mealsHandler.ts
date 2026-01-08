@@ -109,6 +109,22 @@ export async function removeGuestFromMealHandler(req: Request, res: Response) {
   res.status(200).json(result[0]);
 }
 
+function parseOptionalCount(value: unknown) {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "string") {
+    throw new HttpError(400, "Invalid menu count.");
+  }
+
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new HttpError(400, "Invalid menu count.");
+  }
+
+  return parsed;
+}
+
 export async function getMenuHandler(req: Request, res: Response) {
   const userId = authenticateUserId(req);
   if (!userId) {
@@ -128,16 +144,21 @@ export async function getMenuHandler(req: Request, res: Response) {
   
   const includeUnsafe = req.query.includeUnsafe === "true";
 
+  const mainCount = parseOptionalCount(req.query.mainCount);
+  const sideCount = parseOptionalCount(req.query.sideCount);
+  const dessertCount = parseOptionalCount(req.query.dessertCount);
+  const otherCount = parseOptionalCount(req.query.otherCount);
+
   const mainDishes = await getMainMealRankings(mealId, includeUnsafe);
   const sideDishes = await getSideMealRankings(mealId, includeUnsafe);
   const dessertDishes = await getDessertMealRankings(mealId, includeUnsafe);
   const otherDishes = await getOtherMealRankings(mealId, includeUnsafe);
 
   res.status(200).json({
-    main: mainDishes.slice(0, 2),
-    side: sideDishes.slice(0, 4),
-    dessert: dessertDishes.slice(0, 1),
-    other: otherDishes.slice(0, 3)
+    main: mainDishes.slice(0, mainCount ?? 2),
+    side: sideDishes.slice(0, sideCount ?? 4),
+    dessert: dessertDishes.slice(0, dessertCount ?? 1),
+    other: otherDishes.slice(0, otherCount ?? 3)
   });
 }
 

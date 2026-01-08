@@ -58,3 +58,10 @@ export interface Menu {
   dessert: Dish[];
   other: Dish[];
 }
+
+export type MenuCounts = {
+  main: number;
+  side: number;
+  dessert: number;
+  other: number;
+};
