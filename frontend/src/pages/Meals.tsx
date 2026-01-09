@@ -125,9 +125,9 @@ export function Meals() {
 
       {/* Main Content Area */}
       <div className="flex-1 bg-white rounded-lg shadow p-6 overflow-y-auto">
-        {selectedMeal ? (
-          <div className="space-y-8">
-            <div className="border-b border-gray-100 pb-4">
+         {selectedMeal ? (
+           <div className="space-y-8 h-full flex flex-col">
+             <div className="border-b border-gray-100 pb-4 flex-shrink-0">
                <h1 className="text-3xl font-bold text-warm-900">{selectedMeal.name}</h1>
                <p className="text-gray-500 mt-2">{selectedMeal.description}</p>
                <div className="mt-4 flex items-center text-warm-700">
@@ -136,9 +136,9 @@ export function Meals() {
                </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 flex-1 min-h-0">
               {/* Guest Management */}
-              <div>
+              <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                    <h2 className="text-xl font-semibold flex items-center">
                      <UsersIcon className="h-5 w-5 mr-2 text-warm-600" />
@@ -146,8 +146,8 @@ export function Meals() {
                    </h2>
                 </div>
                 
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+                <div className="bg-gray-50 rounded-lg p-4 flex flex-col flex-1">
+                  <div className="space-y-2 overflow-y-auto mb-4 flex-1">
                     {guests?.map(guest => {
                        const isInvited = mealGuests?.some(mg => mg.id === guest.id);
                        return (
@@ -188,8 +188,8 @@ export function Meals() {
                 </div>
               </div>
 
-              {/* Menu Suggestion */}
-              <div>
+               {/* Menu Suggestion */}
+               <div className="flex flex-col">
                 <div className="flex items-center justify-between mb-4">
                    <h2 className="text-xl font-semibold flex items-center">
                      <ChefHat className="h-5 w-5 mr-2 text-warm-600" />
@@ -197,11 +197,11 @@ export function Meals() {
                    </h2>
                 </div>
 
-                 {isLoadingMenu ? (
+                  {isLoadingMenu ? (
 
-                   <div className="text-gray-500 italic">Calculating optimal menu...</div>
-                 ) : (
-                   <div className="space-y-6">
+                    <div className="text-gray-500 italic">Calculating optimal menu...</div>
+                  ) : (
+                    <div className="space-y-6 overflow-y-auto flex-1">
                      {([
                        { key: 'main', title: 'Main' },
                        { key: 'side', title: 'Side' },
