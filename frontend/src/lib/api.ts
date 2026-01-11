@@ -12,6 +12,12 @@ export const api = axios.create({
   withCredentials: true, // Important for cookies
 });
 
+// Separate client for refresh to avoid interceptor loops.
+const refreshClient = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api',
+  withCredentials: true,
+});
+
 let accessToken: string | null = null;
 
 export function setAccessToken(token: string | null) {
@@ -43,6 +49,27 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Dev-only guardrail: if refresh starts looping, warn loudly.
+let refreshAttemptWindowStartMs = 0;
+let refreshAttemptCountInWindow = 0;
+
+function trackRefreshAttempt() {
+  if (import.meta.env.DEV) {
+    const now = Date.now();
+    if (now - refreshAttemptWindowStartMs > 10_000) {
+      refreshAttemptWindowStartMs = now;
+      refreshAttemptCountInWindow = 0;
+    }
+
+    refreshAttemptCountInWindow += 1;
+    if (refreshAttemptCountInWindow > 2) {
+      console.warn('[auth] repeated refresh attempts detected', {
+        refreshAttemptCountInWindow,
+      });
+    }
+  }
+}
+
 // Response interceptor for handling 401s
 api.interceptors.response.use(
   (response) => response,
@@ -51,15 +78,22 @@ api.interceptors.response.use(
 
     const requestedUrl: string | undefined = originalRequest?.url;
     const isPublicTokenEndpoint = requestedUrl?.startsWith('/guests/token/');
+    const isRefreshEndpoint = requestedUrl?.startsWith('/auth/refresh');
 
     // If error is 401 and we haven't tried to refresh yet
     // Note: public token endpoints should not force-refresh or redirect.
-    if (error.response?.status === 401 && !originalRequest?._retry && !isPublicTokenEndpoint) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest?._retry &&
+      !isPublicTokenEndpoint &&
+      !isRefreshEndpoint
+    ) {
       originalRequest._retry = true;
 
       try {
-        // Try to refresh the token
-        const { data } = await api.post('/auth/refresh', undefined, { timeout: 8000 });
+        // Try to refresh the token. Use a separate client to avoid interceptor recursion.
+        trackRefreshAttempt();
+        const { data } = await refreshClient.post('/auth/refresh', undefined, { timeout: 8000 });
         const newAccessToken = data.accessToken;
 
         setAccessToken(newAccessToken);
@@ -72,6 +106,12 @@ api.interceptors.response.use(
         notifyAuthFailure();
         return Promise.reject(refreshError);
       }
+    }
+
+    // If refresh itself fails with 401, broadcast auth failure.
+    if (error.response?.status === 401 && isRefreshEndpoint) {
+      setAccessToken(null);
+      notifyAuthFailure();
     }
 
     return Promise.reject(error);

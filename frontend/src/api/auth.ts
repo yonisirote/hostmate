@@ -19,6 +19,8 @@ export async function signup(payload: { name: string; username: string; password
 }
 
 export async function refresh() {
+  // Note: using the shared axios instance is fine here; refresh calls are
+  // protected from interceptor recursion in `frontend/src/lib/api.ts`.
   const { data } = await api.post<{ accessToken: string }>('/auth/refresh', undefined, { timeout: 8000 });
   return data;
 }
