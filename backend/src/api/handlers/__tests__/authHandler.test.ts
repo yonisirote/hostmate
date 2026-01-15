@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 type AuthHandlersModule = typeof import("../authHandler.js");
 
@@ -33,15 +33,20 @@ const REQUIRED_ENV = {
 };
 
 const mockCreateUser = vi.fn<(user: NewUserRecord) => Promise<UserRecord>>();
-const mockGetUserByUsername = vi.fn<(username: string) => Promise<UserRecord | undefined>>();
-const mockSaveRefreshToken = vi.fn<(token: string, userId: string) => Promise<void>>();
-const mockGetRefreshToken = vi.fn<(token: string) => Promise<RefreshRecord | null>>();
+const mockGetUserByUsername =
+  vi.fn<(username: string) => Promise<UserRecord | undefined>>();
+const mockSaveRefreshToken =
+  vi.fn<(token: string, userId: string) => Promise<void>>();
+const mockGetRefreshToken =
+  vi.fn<(token: string) => Promise<RefreshRecord | null>>();
 const mockRevokeRefreshToken = vi.fn<(token: string) => Promise<void>>();
-const mockGenerateAccessToken = vi.fn<(userId: string, secret: string) => string>();
+const mockGenerateAccessToken =
+  vi.fn<(userId: string, secret: string) => string>();
 const mockGenerateRefreshToken = vi.fn<() => string>();
 const mockGetBearerToken = vi.fn<(req: Request) => string>();
 const mockHashPassword = vi.fn<(password: string) => Promise<string>>();
-const mockCheckHashedPassword = vi.fn<(hashed: string, password: string) => Promise<boolean>>();
+const mockCheckHashedPassword =
+  vi.fn<(hashed: string, password: string) => Promise<boolean>>();
 
 let handlers: AuthHandlersModule;
 
@@ -102,7 +107,9 @@ describe("signupHandler", () => {
     mockCreateUser.mockResolvedValue(input);
     mockHashPassword.mockResolvedValue("hashed-secret");
 
-    const req = { body: { name: "Alice", username: "alice", password: "secret" } } as Request;
+    const req = {
+      body: { name: "Alice", username: "alice", password: "secret" },
+    } as Request;
     const { res, status, json } = createMockResponse();
 
     await handlers.signupHandler(req, res);
@@ -114,10 +121,12 @@ describe("signupHandler", () => {
       hashedPassword: "hashed-secret",
     });
     expect(status).toHaveBeenCalledWith(200);
-    expect(json).toHaveBeenCalledWith(expect.objectContaining({
-      name: "Alice",
-      username: "alice",
-    }));
+    expect(json).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Alice",
+        username: "alice",
+      }),
+    );
   });
 
   test("responds 401 when username missing", async () => {
@@ -127,7 +136,9 @@ describe("signupHandler", () => {
     await handlers.signupHandler(req, res);
 
     expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: "Error: Missing user username/name/password" });
+    expect(json).toHaveBeenCalledWith({
+      message: "Error: Missing user username/name/password",
+    });
     expect(mockCreateUser).not.toHaveBeenCalled();
   });
 
@@ -140,13 +151,17 @@ describe("signupHandler", () => {
     };
     mockGetUserByUsername.mockResolvedValue(existing);
 
-    const req = { body: { name: "Alice", username: "alice", password: "secret" } } as Request;
+    const req = {
+      body: { name: "Alice", username: "alice", password: "secret" },
+    } as Request;
     const { res, status, json } = createMockResponse();
 
     await handlers.signupHandler(req, res);
 
     expect(status).toHaveBeenCalledWith(401);
-    expect(json).toHaveBeenCalledWith({ message: "Error: Username already exists" });
+    expect(json).toHaveBeenCalledWith({
+      message: "Error: Username already exists",
+    });
     expect(mockCreateUser).not.toHaveBeenCalled();
   });
 });
@@ -169,7 +184,10 @@ describe("loginHandler", () => {
 
     await handlers.loginHandler(req, res);
 
-    expect(mockSaveRefreshToken).toHaveBeenCalledWith("refresh-token", "user-1");
+    expect(mockSaveRefreshToken).toHaveBeenCalledWith(
+      "refresh-token",
+      "user-1",
+    );
     expect(cookie).toHaveBeenCalledWith(
       "refreshToken",
       "refresh-token",
@@ -192,7 +210,9 @@ describe("loginHandler", () => {
     const req = { body: { password: "secret" } } as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.loginHandler(req, res)).rejects.toThrow("Missing user username/password");
+    await expect(handlers.loginHandler(req, res)).rejects.toThrow(
+      "Missing user username/password",
+    );
   });
 
   test("throws when user not found", async () => {
@@ -200,7 +220,9 @@ describe("loginHandler", () => {
     const req = { body: { username: "alice", password: "secret" } } as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.loginHandler(req, res)).rejects.toThrow("Username does not exist");
+    await expect(handlers.loginHandler(req, res)).rejects.toThrow(
+      "Username does not exist",
+    );
   });
 
   test("throws when password invalid", async () => {
@@ -215,7 +237,9 @@ describe("loginHandler", () => {
     const req = { body: { username: "alice", password: "wrong" } } as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.loginHandler(req, res)).rejects.toThrow("Password is incorrect");
+    await expect(handlers.loginHandler(req, res)).rejects.toThrow(
+      "Password is incorrect",
+    );
   });
 });
 
@@ -224,17 +248,23 @@ describe("refreshHandler", () => {
     const req = { cookies: {} } as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.refreshHandler(req, res)).rejects.toThrow("Unauthorized");
+    await expect(handlers.refreshHandler(req, res)).rejects.toThrow(
+      "Unauthorized",
+    );
     expect(mockGetRefreshToken).not.toHaveBeenCalled();
   });
 
   test("responds 401 when refresh token not found", async () => {
-    const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     mockGetRefreshToken.mockResolvedValue(null);
 
     const { res } = createMockResponse();
 
-    await expect(handlers.refreshHandler(req, res)).rejects.toThrow("Invalid refresh token");
+    await expect(handlers.refreshHandler(req, res)).rejects.toThrow(
+      "Invalid refresh token",
+    );
 
     expect(mockGetRefreshToken).toHaveBeenCalledWith("refresh-token");
   });
@@ -247,10 +277,14 @@ describe("refreshHandler", () => {
     };
 
     mockGetRefreshToken.mockResolvedValue(stored);
-  const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.refreshHandler(req, res)).rejects.toThrow("Invalid refresh token");
+    await expect(handlers.refreshHandler(req, res)).rejects.toThrow(
+      "Invalid refresh token",
+    );
     expect(mockRevokeRefreshToken).not.toHaveBeenCalled();
   });
 
@@ -262,10 +296,14 @@ describe("refreshHandler", () => {
     };
 
     mockGetRefreshToken.mockResolvedValue(stored);
-  const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.refreshHandler(req, res)).rejects.toThrow("Refresh token expired");
+    await expect(handlers.refreshHandler(req, res)).rejects.toThrow(
+      "Refresh token expired",
+    );
 
     expect(mockRevokeRefreshToken).toHaveBeenCalledWith("refresh-token");
   });
@@ -280,12 +318,17 @@ describe("refreshHandler", () => {
     mockGetRefreshToken.mockResolvedValue(stored);
     mockGenerateAccessToken.mockReturnValue("new-access-token");
 
-  const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     const { res, status, json } = createMockResponse();
 
     await handlers.refreshHandler(req, res);
 
-    expect(mockGenerateAccessToken).toHaveBeenCalledWith("user-1", REQUIRED_ENV.ACCESS_TOKEN_SECRET);
+    expect(mockGenerateAccessToken).toHaveBeenCalledWith(
+      "user-1",
+      REQUIRED_ENV.ACCESS_TOKEN_SECRET,
+    );
     expect(mockRevokeRefreshToken).not.toHaveBeenCalled();
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({ accessToken: "new-access-token" });
@@ -304,12 +347,17 @@ describe("refreshHandler", () => {
     mockGetRefreshToken.mockResolvedValue(stored);
     mockGenerateAccessToken.mockReturnValue("edge-access-token");
 
-    const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     const { res, status, json } = createMockResponse();
 
     await handlers.refreshHandler(req, res);
 
-    expect(mockGenerateAccessToken).toHaveBeenCalledWith("user-1", REQUIRED_ENV.ACCESS_TOKEN_SECRET);
+    expect(mockGenerateAccessToken).toHaveBeenCalledWith(
+      "user-1",
+      REQUIRED_ENV.ACCESS_TOKEN_SECRET,
+    );
     expect(mockRevokeRefreshToken).not.toHaveBeenCalled();
     expect(status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({ accessToken: "edge-access-token" });
@@ -326,10 +374,14 @@ describe("refreshHandler", () => {
 
     mockGetRefreshToken.mockResolvedValue(stored);
 
-    const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
     const { res } = createMockResponse();
 
-    await expect(handlers.refreshHandler(req, res)).rejects.toThrow("Invalid refresh token");
+    await expect(handlers.refreshHandler(req, res)).rejects.toThrow(
+      "Invalid refresh token",
+    );
 
     expect(mockGenerateAccessToken).not.toHaveBeenCalled();
     expect(mockRevokeRefreshToken).not.toHaveBeenCalled();
@@ -340,7 +392,9 @@ describe("revokeHandler", () => {
   test("revokes refresh token, clears cookie, and returns 204", async () => {
     mockRevokeRefreshToken.mockResolvedValue();
     const { res, status, clearCookie } = createMockResponse();
-    const req = { cookies: { refreshToken: "refresh-token" } } as unknown as Request;
+    const req = {
+      cookies: { refreshToken: "refresh-token" },
+    } as unknown as Request;
 
     await handlers.revokeHandler(req, res);
 

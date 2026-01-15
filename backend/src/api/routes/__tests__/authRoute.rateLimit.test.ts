@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import type { Response } from "express";
 import { describe, expect, test, vi } from "vitest";
 
 /**
@@ -17,12 +18,13 @@ import { describe, expect, test, vi } from "vitest";
  */
 
 vi.mock("../../handlers/authHandler.js", () => ({
-  loginHandler: (_req: unknown, res: any) => res.status(200).json({ ok: true }),
-  signupHandler: (_req: unknown, res: any) =>
+  loginHandler: (_req: unknown, res: Response) =>
     res.status(200).json({ ok: true }),
-  refreshHandler: (_req: unknown, res: any) =>
+  signupHandler: (_req: unknown, res: Response) =>
     res.status(200).json({ ok: true }),
-  revokeHandler: (_req: unknown, res: any) =>
+  refreshHandler: (_req: unknown, res: Response) =>
+    res.status(200).json({ ok: true }),
+  revokeHandler: (_req: unknown, res: Response) =>
     res.status(200).json({ ok: true }),
 }));
 
