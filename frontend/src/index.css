@@ -1,21 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --color-warm-50: #fcf9f4;
-  --color-warm-100: #f7f1e6;
-  --color-warm-200: #efe2ce;
-  --color-warm-300: #e5cdac;
-  --color-warm-400: #dab287;
-  --color-warm-500: #cf9364;
-  --color-warm-600: #c27a4b;
-  --color-warm-700: #a1603d;
-  --color-warm-800: #844f36;
-  --color-warm-900: #6b412f;
-  --color-warm-950: #3a2218;
+    --color-warm-50: #fcf9f4;
+    --color-warm-100: #f7f1e6;
+    --color-warm-200: #efe2ce;
+    --color-warm-300: #e5cdac;
+    --color-warm-400: #dab287;
+    --color-warm-500: #cf9364;
+    --color-warm-600: #c27a4b;
+    --color-warm-700: #a1603d;
+    --color-warm-800: #844f36;
+    --color-warm-900: #6b412f;
+    --color-warm-950: #3a2218;
 }
 
 @layer base {
-  body {
-    @apply bg-warm-50 text-warm-900;
-  }
+    body {
+        @apply bg-warm-100 text-warm-900;
+    }
 }

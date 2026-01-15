@@ -17,7 +17,11 @@ type CreateLimiterOptions = {
   message: string;
 };
 
-function createLimiter({ windowMs, max, message }: CreateLimiterOptions): RequestHandler {
+function createLimiter({
+  windowMs,
+  max,
+  message,
+}: CreateLimiterOptions): RequestHandler {
   return rateLimit({
     windowMs,
     max,
