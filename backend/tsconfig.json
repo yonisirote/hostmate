@@ -38,7 +38,6 @@
     "moduleResolution": "nodenext",
 
     //"allowImportingTsExtensions": false,
-    
 
     // Recommended Options
     "strict": true,
@@ -47,15 +46,14 @@
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
   },
-  "include": ["src"],
+  "include": ["src", "src/**/*.test.ts"],
   "exclude": [
     "dist",
     "eslint.config.js",
     "eslint.config.d.ts",
     "drizzle.config.ts",
     "vitest.config.ts",
-    "src/**/*.test.ts"
-  ]
+  ],
 }

@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
-import { login as loginRequest, toUser } from '../api/auth';
-import { useAuth } from '../context/useAuth';
+import { login as loginRequest, toUser } from "../api/auth";
+import { useAuth } from "../context/useAuth";
 
 export function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -16,14 +16,14 @@ export function Login() {
     try {
       const data = await loginRequest({ username, password });
       login(toUser(data), data.accessToken);
-      navigate('/');
+      navigate("/");
     } catch {
-      toast.error('Invalid credentials');
+      toast.error("Invalid credentials");
     }
   };
 
   return (
-    <div className="min-h-screen bg-warm-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-warm-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <h2 className="mt-6 text-center text-3xl font-extrabold text-warm-900">
           Sign in to Hostmate
@@ -34,7 +34,10 @@ export function Login() {
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Username
               </label>
               <div className="mt-1">
@@ -51,7 +54,10 @@ export function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <div className="mt-1">
@@ -84,7 +90,13 @@ export function Login() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Or <Link to="/signup" className="font-medium text-warm-600 hover:text-warm-500">create an account</Link>
+                  Or{" "}
+                  <Link
+                    to="/signup"
+                    className="font-medium text-warm-600 hover:text-warm-500"
+                  >
+                    create an account
+                  </Link>
                 </span>
               </div>
             </div>

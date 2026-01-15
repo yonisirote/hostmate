@@ -154,6 +154,9 @@ describe("userQueries", () => {
     const [row] = await userQueries.saveRefreshToken("t1", "u1");
 
     expect(row).toBeDefined();
+    if (!row) {
+      throw new Error("Expected saveRefreshToken to return a row");
+    }
     expect(row).toMatchObject({
       token: "t1",
       userId: "u1",
@@ -174,7 +177,14 @@ describe("userQueries", () => {
 
     await exec(
       "INSERT INTO refresh_tokens (token, user_id, expires_at, revoked_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)",
-      ["t1", "u1", Date.now() + 1000, null, iso("2025-01-01"), iso("2025-01-01")],
+      [
+        "t1",
+        "u1",
+        Date.now() + 1000,
+        null,
+        iso("2025-01-01"),
+        iso("2025-01-01"),
+      ],
     );
 
     const [token] = await userQueries.revokeRefreshToken("t1");
