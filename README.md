@@ -39,10 +39,6 @@ Start planning your next gathering! [HostMate](https://hostmate.up.railway.app/)
 
 ## 🚧 Coming soon
 
-- Allergies (guests & dishes)
-	- Allow tagging allergies on guest profiles and ingredients/allergens on dishes.
-	- Meal recommendations will, by default, exclude dishes that contain any of a guest's recorded allergeis (with per-meal overrides for hosts).
-
 - Ingredients & shopping list
 	- Store ingredients for each dish and generate an aggregated shopping list from a meal's recommended menu.
 	- Shopping lists will account for guest counts and servings, and can be exported or printed.
