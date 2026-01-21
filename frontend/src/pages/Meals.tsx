@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { clsx } from 'clsx';
@@ -17,6 +17,7 @@ export function Meals() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<Meal | null>(null);
   const [selectedMealId, setSelectedMealId] = useState<string | null>(searchParams.get('id'));
+  const [pendingGuestIds, setPendingGuestIds] = useState<string[]>([]);
 
   const [menuCounts, setMenuCounts] = useState({
     main: 3,
@@ -34,6 +35,24 @@ export function Meals() {
   const { addMeal, updateMealById, deleteMealById, updateMealGuests } = useMealMutations();
 
   const selectedMeal = useMemo(() => meals?.find((meal) => meal.id === selectedMealId), [meals, selectedMealId]);
+  const currentGuestIds = useMemo(() => mealGuests?.map((guest) => guest.id) ?? [], [mealGuests]);
+  const hasGuestChanges = useMemo(() => {
+    if (currentGuestIds.length !== pendingGuestIds.length) {
+      return true;
+    }
+    const currentSet = new Set(currentGuestIds);
+    return pendingGuestIds.some((id) => !currentSet.has(id));
+  }, [currentGuestIds, pendingGuestIds]);
+
+  useEffect(() => {
+    if (!selectedMealId) {
+      setPendingGuestIds([]);
+      return;
+    }
+    if (mealGuests) {
+      setPendingGuestIds(mealGuests.map((guest) => guest.id));
+    }
+  }, [mealGuests, selectedMealId]);
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -149,29 +168,19 @@ export function Meals() {
                 <div className="bg-gray-50 rounded-lg p-4 flex flex-col flex-1">
                   <div className="space-y-2 overflow-y-auto mb-4 flex-1">
                     {guests?.map(guest => {
-                       const isInvited = mealGuests?.some(mg => mg.id === guest.id);
+                       const isInvited = pendingGuestIds.includes(guest.id);
                        return (
                          <label key={guest.id} className="flex items-center space-x-3 p-2 hover:bg-white rounded cursor-pointer">
                             <input 
                               type="checkbox"
                               checked={isInvited || false}
                               onChange={(e) => {
-                                 const currentIds = mealGuests?.map(g => g.id) || [];
-                                 const newIds = e.target.checked 
-                                   ? [...currentIds, guest.id]
-                                   : currentIds.filter(id => id !== guest.id);
-                                  updateMealGuests.mutate(
-                                    {
-                                      mealId: selectedMeal.id,
-                                      guestIds: newIds,
-                                      currentGuestIds: currentIds,
-                                    },
-                                    {
-                                      onSuccess: () => {
-                                        toast.success('Guest list updated!');
-                                      },
-                                    }
-                                  );
+                                 setPendingGuestIds((prev) => {
+                                   if (e.target.checked) {
+                                     return prev.includes(guest.id) ? prev : [...prev, guest.id];
+                                   }
+                                   return prev.filter((id) => id !== guest.id);
+                                 });
                               }}
                               className="h-4 w-4 text-warm-600 focus:ring-warm-500 border-gray-300 rounded"
                             />
@@ -182,9 +191,38 @@ export function Meals() {
                        );
                     })}
                   </div>
-                  <p className="text-xs text-gray-500 text-center">
-                    Select guests to invite. The menu will update automatically based on their preferences and allergies.
-                  </p>
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!selectedMeal) return;
+                        updateMealGuests.mutate(
+                          {
+                            mealId: selectedMeal.id,
+                            guestIds: pendingGuestIds,
+                            currentGuestIds,
+                          },
+                          {
+                            onSuccess: () => {
+                              toast.success('Guest list updated!');
+                            },
+                          }
+                        );
+                      }}
+                      disabled={!selectedMeal || !hasGuestChanges || updateMealGuests.isPending}
+                      className={clsx(
+                        "w-full rounded-md px-4 py-2 text-sm font-semibold shadow-sm transition",
+                        !selectedMeal || !hasGuestChanges || updateMealGuests.isPending
+                          ? "cursor-not-allowed bg-gray-200 text-gray-400"
+                          : "bg-warm-600 text-white hover:bg-warm-700"
+                      )}
+                    >
+                      {updateMealGuests.isPending ? 'Saving...' : 'Save guest list'}
+                    </button>
+                    <p className="text-xs text-gray-500 text-center">
+                      Select guests to invite, then save to refresh the menu suggestions.
+                    </p>
+                  </div>
                 </div>
               </div>
 
